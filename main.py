@@ -21,7 +21,7 @@ chrome_options.add_argument('--disable-dev-shm-usage')
 
 # Set up the WebDriver
 # service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
-service = Service('/usr/local/bin/chromedriver')
+service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
 actions = ActionChains(driver)
 
