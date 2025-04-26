@@ -44,27 +44,7 @@ def login(email, password):
     login_button.click()
     
     print("Logged in successfully.")
-
-# Navigate to a specific server
-def navigate_to_server(server_name):
-    try:
-        actions.key_down(Keys.CONTROL).key_down(Keys.ALT).send_keys(Keys.ARROW_DOWN).key_up(Keys.ALT).key_up(Keys.CONTROL).perform()
-        print(f"Navigated to {server_name}")
-    except Exception as e:
-        print(f"Error navigating to server: {e}")
-
-# Navigate to a specific channel
-def navigate_to_channel(channel_name):
-    try:
-        wait = WebDriverWait(driver, 15)
-        # Match the div by its exact visible text
-        channel_element = wait.until(EC.element_to_be_clickable((
-            By.XPATH, f'//div[text()="{channel_name}"]'
-        )))
-        channel_element.click()
-        print(f"Navigated to channel: {channel_name}")
-    except Exception as e:
-        print(f"Error navigating to channel: {e}")
+    
 
 def send_kd(trigger="kd"):
     try:
@@ -165,6 +145,8 @@ if __name__ == "__main__":
     # Get credentials from environment variables
     email = os.getenv('DISCORD_EMAIL')
     password = os.getenv('DISCORD_PASSWORD')
+    guild_id = os.getenv('DISCORD_GUILD_ID')
+    channel_id = os.getenv('DISCORD_CHANNEL_ID')
     
     if not email or not password:
         raise ValueError("Please set your Discord email and password in the environment variables.")
@@ -173,15 +155,8 @@ if __name__ == "__main__":
     
     # Add a delay to handle any dynamic content loading
     time.sleep(random.uniform(5, 8))
-    
-    # Navigate to specific server and channel
-    navigate_to_server(" The Boys Hangout")
 
-    time.sleep(random.uniform(1, 2))
-
-    navigate_to_channel("baruta-kots")
-    
-    print("Initialize")
+    driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}') # Navigate to the channel
 
     while True:
 
