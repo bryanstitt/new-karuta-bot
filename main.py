@@ -160,7 +160,6 @@ def execute_loop(offset_minutes):
                 time.sleep(2)
 
                 send_kd()
-                cooldown_offset += 5 # add +5 sec to cron each time
 
                 message = wait_and_get_karuta_message()
                 download_image_from_message(message)
@@ -182,6 +181,8 @@ def execute_loop(offset_minutes):
             LOGGER.info(f"Retrying in {__error_delay} seconds...")
             time.sleep(__error_delay)
             get_channel(guild_id, channel_id) # core of the fix
+        
+        else: cooldown_offset += 5 # add +5 sec to cron each time it runs successfully
 
 # Main execution
 if __name__ == "__main__":
