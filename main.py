@@ -156,7 +156,7 @@ def execute_loop(offset_minutes):
                 # It's time to execute!
                 print(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
                 LOGGER.info(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
-                time.sleep(random.uniform(1, 2))
+                time.sleep(2)
 
                 send_kd()
 
