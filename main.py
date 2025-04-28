@@ -161,7 +161,6 @@ def execute_loop(offset_minutes):
 
                 send_kd()
                 cooldown_offset += 5 # add +5 sec to cron each time
-                if cooldown_offset >= 60: cooldown_offset = 0
 
                 message = wait_and_get_karuta_message()
                 download_image_from_message(message)
