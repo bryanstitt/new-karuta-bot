@@ -145,20 +145,23 @@ def execute_loop(offset_minutes):
     execution_times = [(minute + offset_minutes) % 60 for minute in execution_minutes]
 
     __failed = False
+    cooldown_offset = 0
     while True:
         try:
             now = datetime.now()
             current_minute = now.minute
-            current_second = now.second
+            current_second = now.second + cooldown_offset
 
-            if __failed or (current_minute in execution_times and current_second == 0):
+            if __failed or (current_minute in execution_times and current_second % 60 == 0):
                 __failed = False
-                # It's time to execute!
+                # It's time to execute!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 print(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
                 LOGGER.info(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
                 time.sleep(2)
 
                 send_kd()
+                cooldown_offset += 5 # add +5 sec to cron each time
+                if cooldown_offset >= 60: cooldown_offset = 0
 
                 message = wait_and_get_karuta_message()
                 download_image_from_message(message)
