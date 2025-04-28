@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import requests
 from get_best_position import get_best_position
 import logging
+from datetime import datetime, timedelta
 
 #setup logging
 log_level = os.getenv('LOG_LEVEL', 20)
@@ -138,6 +139,43 @@ def send_reaction(index_ed_tuple):
 
 def get_channel(guild_id, channel_id): driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}')
 
+def execute_loop(offset_minutes):
+    execution_minutes = [0, 15, 30, 45]  # minutes in the hour when to execute (before offset)
+
+    execution_times = [(minute + offset_minutes) % 60 for minute in execution_minutes]
+
+    while True:
+        try:
+            now = datetime.now()
+            current_minute = now.minute
+            current_second = now.second
+
+            if current_minute in execution_times and current_second == 0:
+                # It's time to execute!
+                print(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+                LOGGER.info()
+                time.sleep(random.uniform(1, 2))
+
+                send_kd()
+
+                message = wait_and_get_karuta_message()
+                download_image_from_message(message)
+
+                index, ed = get_best_position()
+                LOGGER.info(f"Best position: {index+1}, ED: {ed}")
+
+                time.sleep(5)
+
+                send_reaction((index, ed))
+        except Exception as e:
+            __error_delay = 5
+            print(f"Error: {e}")
+            LOGGER.error(f"Error: {e}")
+            print(f"Retrying in {__error_delay} seconds...")
+            LOGGER.info(f"Retrying in {__error_delay} seconds...")
+            time.sleep(__error_delay)
+            get_channel(guild_id, channel_id) # core of the fix
+
 # Main execution
 if __name__ == "__main__":
     load_dotenv()
@@ -146,6 +184,7 @@ if __name__ == "__main__":
     password = os.getenv('DISCORD_PASSWORD')
     guild_id = os.getenv('DISCORD_GUILD_ID')
     channel_id = os.getenv('DISCORD_CHANNEL_ID')
+    offset_minutes = int(os.getenv('OFFSET_MINUTES')) 
     
     if not email or not password:
         raise ValueError("Please set your Discord email and password in the environment variables.")
@@ -174,28 +213,4 @@ if __name__ == "__main__":
     
     driver.save_screenshot('channel-view.png')
 
-    while True:
-        try:
-            time.sleep(random.uniform(1, 2))
-
-            send_kd()
-
-            message = wait_and_get_karuta_message()
-            download_image_from_message(message)
-
-            index, ed = get_best_position()
-            LOGGER.info(f"Best position: {index+1}, ED: {ed}")
-
-            time.sleep(5)
-
-            send_reaction((index, ed))
-
-            time.sleep(900)
-        except Exception as e:
-            __error_delay = 5
-            print(f"Error: {e}")
-            LOGGER.error(f"Error: {e}")
-            print(f"Retrying in {__error_delay} seconds...")
-            LOGGER.info(f"Retrying in {__error_delay} seconds...")
-            time.sleep(__error_delay)
-            get_channel(guild_id, channel_id) # core of the fix
+    execute_loop(offset_minutes)
