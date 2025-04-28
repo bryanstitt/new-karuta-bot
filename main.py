@@ -71,9 +71,7 @@ def send_kd(trigger="kd"):
         LOGGER.info(f"Sent message: {trigger}")
         print(f"Sent message: {trigger}")
 
-    except Exception as e:
-        print(f"Error: {e}")
-        LOGGER.error(f"Error: {e}")
+    except Exception as e: raise Exception(f"Failed to send kd: {e}")
 
 def wait_and_get_karuta_message(wait_time=8):
     print(f"Waiting {wait_time} seconds before checking for Karuta message...")
@@ -94,9 +92,7 @@ def wait_and_get_karuta_message(wait_time=8):
                     return message
             except:
                 continue  # If username not found, skip
-    except Exception as e:
-        print(f"Error while retrieving Karuta message: {str(e)}")
-        LOGGER.error(f"Error while retrieving Karuta message: {str(e)}")
+    except Exception as e: raise Exception(f"Failed to retrieve Karuta messages: {e}")
     
     raise ValueError("No Karuta message found after waiting.")
 
@@ -113,9 +109,7 @@ def download_image_from_message(message_element):
 
         print("Image downloaded as discord_image.png")
         LOGGER.info("Image downloaded as discord_image.png")
-    except Exception as e:
-        print("Failed to download image:", e)
-        LOGGER.error(f"Failed to download image:", e)
+    except Exception as e: raise Exception(f"Failed to download image: {e}")
 
 def send_reaction(index_ed_tuple):
     try:
@@ -140,10 +134,9 @@ def send_reaction(index_ed_tuple):
         if ed == 7:
             message_box.send_keys('klu')
             message_box.send_keys(Keys.ENTER)            
-    except Exception as e:
-        print("Failed to send reaction:", e)
-        LOGGER.error("Failed to send reaction:", e)
+    except Exception as e: raise Exception(f"Failed to send reaction: {e}")
 
+def get_channel(guild_id, channel_id): driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}')
 
 # Main execution
 if __name__ == "__main__":
@@ -157,33 +150,52 @@ if __name__ == "__main__":
     if not email or not password:
         raise ValueError("Please set your Discord email and password in the environment variables.")
     
-    login(email, password)
+    # try to login 3 times
+    for _ in range(3):
+        try:
+            login(email, password)
+            break # Exit the loop if login is successful
+        except Exception as e:
+            __login_delay = 5
+            print(f"Error during login: {e}")
+            LOGGER.error(f"Error during login: {e}")
+            print(f"Retrying login in {__login_delay} seconds...")
+            LOGGER.info(f"Retrying login in {__login_delay} seconds...")
+            time.sleep(__login_delay)
     
     # Add a delay to handle any dynamic content loading
     time.sleep(random.uniform(5, 8))
 
     driver.save_screenshot('post-login.png')
 
-    driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}') # Navigate to the channel
+    get_channel(guild_id, channel_id)
 
     time.sleep(random.uniform(1, 2))
     
     driver.save_screenshot('channel-view.png')
 
     while True:
+        try:
+            time.sleep(random.uniform(1, 2))
 
-        time.sleep(random.uniform(1, 2))
+            send_kd()
 
-        send_kd()
+            message = wait_and_get_karuta_message()
+            download_image_from_message(message)
 
-        message = wait_and_get_karuta_message()
-        download_image_from_message(message)
+            index, ed = get_best_position()
+            LOGGER.info(f"Best position: {index+1}, ED: {ed}")
 
-        index, ed = get_best_position()
-        LOGGER.info(f"Best position: {index+1}, ED: {ed}")
+            time.sleep(5)
 
-        time.sleep(5)
+            send_reaction((index, ed))
 
-        send_reaction((index, ed))
-
-        time.sleep(900)
+            time.sleep(900)
+        except Exception as e:
+            __error_delay = 5
+            print(f"Error: {e}")
+            LOGGER.error(f"Error: {e}")
+            print(f"Retrying in {__error_delay} seconds...")
+            LOGGER.info(f"Retrying in {__error_delay} seconds...")
+            time.sleep(__error_delay)
+            get_channel(guild_id, channel_id) # core of the fix
