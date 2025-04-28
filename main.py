@@ -153,7 +153,7 @@ def execute_loop(offset_minutes):
             if current_minute in execution_times and current_second == 0:
                 # It's time to execute!
                 print(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
-                LOGGER.info()
+                LOGGER.info(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
                 time.sleep(random.uniform(1, 2))
 
                 send_kd()
