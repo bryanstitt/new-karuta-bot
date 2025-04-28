@@ -146,7 +146,7 @@ def execute_loop(offset_minutes):
 
     __failed = False
     cooldown_offset = 5
-    last_execution_minute = 0
+    last_execution_minute = -1
     while True:
         try:
             now = datetime.now()
