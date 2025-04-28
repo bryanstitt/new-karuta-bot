@@ -144,16 +144,18 @@ def execute_loop(offset_minutes):
 
     execution_times = [(minute + offset_minutes) % 60 for minute in execution_minutes]
 
+    __failed = False
     while True:
         try:
             now = datetime.now()
             current_minute = now.minute
             current_second = now.second
 
-            if current_minute in execution_times and current_second == 0:
+            if __failed or (current_minute in execution_times and current_second == 0):
+                __failed = False
                 # It's time to execute!
-                print(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
-                LOGGER.info(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+                LOGGER.info(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
                 time.sleep(random.uniform(1, 2))
 
                 send_kd()
@@ -167,7 +169,10 @@ def execute_loop(offset_minutes):
                 time.sleep(5)
 
                 send_reaction((index, ed))
+            else: time.sleep(0.5)
+            
         except Exception as e:
+            __failed = True
             __error_delay = 5
             print(f"Error: {e}")
             LOGGER.error(f"Error: {e}")
