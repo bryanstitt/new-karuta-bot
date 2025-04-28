@@ -15,7 +15,7 @@ from get_best_position import get_best_position
 import logging
 
 #setup logging
-log_level = os.getenv('LOG_LEVEL', 10)
+log_level = os.getenv('LOG_LEVEL', 20)
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.WARNING if log_level is None else int(log_level)) # default log level is WARNING
 handler = logging.FileHandler(filename='log.log', encoding='utf-8', mode='w')
@@ -158,14 +158,16 @@ if __name__ == "__main__":
         raise ValueError("Please set your Discord email and password in the environment variables.")
     
     login(email, password)
-
-    driver.save_screenshot('post-login.png')
     
     # Add a delay to handle any dynamic content loading
     time.sleep(random.uniform(5, 8))
 
+    driver.save_screenshot('post-login.png')
+
     driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}') # Navigate to the channel
 
+    time.sleep(random.uniform(1, 2))
+    
     driver.save_screenshot('channel-view.png')
 
     while True:
