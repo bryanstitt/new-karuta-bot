@@ -12,6 +12,15 @@ import random
 from dotenv import load_dotenv
 import requests
 from get_best_position import get_best_position
+import logging
+
+#setup logging
+log_level = os.getenv('LOG_LEVEL', 10)
+LOGGER = logging.getLogger()
+LOGGER.setLevel(logging.WARNING if log_level is None else int(log_level)) # default log level is WARNING
+handler = logging.FileHandler(filename='log.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(filename)s:%(lineno)s: %(message)s'))
+LOGGER.addHandler(handler)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -43,7 +52,8 @@ def login(email, password):
     login_button = driver.find_element(By.XPATH, '//button[@type="submit"]')
     login_button.click()
     
-    print("Logged in successfully.")
+    print("Triggered log in click.")
+    LOGGER.info("Triggered log in click.")
     
 
 def send_kd(trigger="kd"):
@@ -57,66 +67,61 @@ def send_kd(trigger="kd"):
         input_box.click()
         input_box.send_keys(trigger)
         input_box.send_keys(Keys.ENTER)
+
+        LOGGER.info(f"Sent message: {trigger}")
         print(f"Sent message: {trigger}")
 
     except Exception as e:
         print(f"Error: {e}")
+        LOGGER.error(f"Error: {e}")
 
-def wait_for_karuta_message(timeout=120, check_interval=1):
-    print("Waiting for new Karuta message...")
-    start_time = time.time()
+def wait_and_get_karuta_message(wait_time=8):
+    print(f"Waiting {wait_time} seconds before checking for Karuta message...")
+    LOGGER.info(f"Waiting {wait_time} seconds before checking for Karuta message...")
     
-    # Get initial count of messages to ignore existing ones
-    initial_messages = driver.find_elements(By.CLASS_NAME, "message__5126c")
-    last_known_count = len(initial_messages)
+    time.sleep(wait_time)
     
-    while time.time() - start_time < timeout:
-        try:
-            # Get current messages
-            current_messages = driver.find_elements(By.CLASS_NAME, "message__5126c")
-            current_count = len(current_messages)
-            
-            # Only proceed if new messages have appeared
-            if current_count > last_known_count:
-                # Check only the new messages (the ones that appeared since last check)
-                for message in current_messages[last_known_count:]:
-                    try:
-                        username = message.find_element(By.CLASS_NAME, "username_c19a55").text
-                        if username.lower() == "karuta":
-                            print("Found new message from Karuta.")
-                            return message
-                    except:
-                        continue  # Skip if we can't check this message
-                
-                # Update the count for next iteration
-                last_known_count = current_count
-                
-        except Exception as e:
-            print(f"Error while checking for messages: {str(e)}")
+    try:
+        # After waiting, get the latest messages
+        messages = driver.find_elements(By.CLASS_NAME, "message__5126c")
         
-        # Wait before checking again
-        time.sleep(check_interval)
+        for message in reversed(messages):  # Check from newest to oldest
+            try:
+                username = message.find_element(By.CLASS_NAME, "username_c19a55").text
+                if username.lower() == "karuta":
+                    print("Found message from Karuta.")
+                    LOGGER.error(f"Found message from Karuta.")
+                    return message
+            except:
+                continue  # If username not found, skip
+    except Exception as e:
+        print(f"Error while retrieving Karuta message: {str(e)}")
+        LOGGER.error(f"Error while retrieving Karuta message: {str(e)}")
     
-    raise TimeoutError(f"Timed out after {timeout} seconds waiting for new Karuta message.")
+    raise ValueError("No Karuta message found after waiting.")
 
 def download_image_from_message(message_element):
     try:
         link = message_element.find_element(By.TAG_NAME, "a")
         href = link.get_attribute("href")
         print(f"Downloading image from: {href}")
+        LOGGER.info(f"Downloading image from: {href}")
         r = requests.get(href)
 
         with open("discord_image.png", "wb") as f:
             f.write(r.content)
 
         print("Image downloaded as discord_image.png")
+        LOGGER.info("Image downloaded as discord_image.png")
     except Exception as e:
         print("Failed to download image:", e)
+        LOGGER.error(f"Failed to download image:", e)
 
 def send_reaction(index_ed_tuple):
     try:
         index, ed = index_ed_tuple
-        print(f"Sending reaction: {index} with ED: {ed}")
+        print(f"Sending reaction for card {index+1} with ED: {ed}")
+        LOGGER.info(f"Sending reaction for card {index-1} with ED: {ed}")
 
         message_box = driver.find_element("xpath", '//div[@role="textbox"]')
         match index:
@@ -137,6 +142,7 @@ def send_reaction(index_ed_tuple):
             message_box.send_keys(Keys.ENTER)            
     except Exception as e:
         print("Failed to send reaction:", e)
+        LOGGER.error("Failed to send reaction:", e)
 
 
 # Main execution
@@ -152,11 +158,15 @@ if __name__ == "__main__":
         raise ValueError("Please set your Discord email and password in the environment variables.")
     
     login(email, password)
+
+    driver.save_screenshot('post-login.png')
     
     # Add a delay to handle any dynamic content loading
     time.sleep(random.uniform(5, 8))
 
     driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}') # Navigate to the channel
+
+    driver.save_screenshot('channel-view.png')
 
     while True:
 
@@ -164,10 +174,11 @@ if __name__ == "__main__":
 
         send_kd()
 
-        message = wait_for_karuta_message()
+        message = wait_and_get_karuta_message()
         download_image_from_message(message)
 
         index, ed = get_best_position()
+        LOGGER.info(f"Best position: {index+1}, ED: {ed}")
 
         time.sleep(5)
 
