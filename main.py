@@ -184,7 +184,7 @@ if __name__ == "__main__":
     password = os.getenv('DISCORD_PASSWORD')
     guild_id = os.getenv('DISCORD_GUILD_ID')
     channel_id = os.getenv('DISCORD_CHANNEL_ID')
-    offset_minutes = int(os.getenv('OFFSET_MINUTES')) 
+    offset_minutes = int(os.getenv('CRON_OFFSET')) 
     
     if not email or not password:
         raise ValueError("Please set your Discord email and password in the environment variables.")
