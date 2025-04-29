@@ -57,7 +57,7 @@ def login(email, password):
     LOGGER.info("Triggered log in click.")
     
 
-def send_msg(trigger="kd"):
+def send_msg():
     try:
         wait = WebDriverWait(driver, 15)
 
@@ -139,44 +139,56 @@ def send_reaction(index_ed_tuple):
 
 def get_channel(guild_id, channel_id): driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}')
 
+def send_kd_and_reaction(now):
+    # It's time to execute!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    print(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    LOGGER.info(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    time.sleep(2)
+
+    send_msg("kd")
+
+    message = wait_and_get_karuta_message()
+    download_image_from_message(message)
+
+    index, ed = get_best_position()
+    LOGGER.info(f"Best position: {index+1}, ED: {ed}")
+
+    time.sleep(5)
+
+    send_reaction((index, ed))
+
+def wait_16_minutes(start_time):
+    interval = 16 * 60  # 16 minutes = 960 seconds
+    elapsed = time.time() - start_time
+    sleep_time = max(0, interval - elapsed)
+    time.sleep(sleep_time)
+
 def execute_loop(offset_minutes):
     execution_minutes = [0, 15, 30, 45]  # minutes in the hour when to execute (before offset)
 
     execution_times = [(minute + offset_minutes) % 60 for minute in execution_minutes]
 
+    first_iteration = True
+
     __failed = False
-    cooldown_offset_minutes = 0
     while True:
         try:
+            start_time = time.time()
             now = datetime.now()
             
-            # Subtract the offset from the current time to get the adjusted time.
-            # If we add it, it would run that many minutes/seconds earlier than the cron schedule.
-            # Subtracting makes it run that many minutes/seconds later than the cron schedule.
-            current_minute = now.minute - cooldown_offset_minutes
+            current_minute = now.minute
             current_second = now.second
 
             if __failed or ((current_minute % 60) in execution_times and current_second == 0):
-                # It's time to execute!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                print(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
-                LOGGER.info(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
-                time.sleep(2)
-
-                send_msg()
-
-                message = wait_and_get_karuta_message()
-                download_image_from_message(message)
-
-                index, ed = get_best_position()
-                LOGGER.info(f"Best position: {index+1}, ED: {ed}")
-
-                time.sleep(5)
-
-                send_reaction((index, ed))
-                
-                cooldown_offset_minutes += 1
+                send_kd_and_reaction(now)
                 __failed = False
+                first_iteration = False
+                wait_16_minutes(start_time) 
             else: time.sleep(0.5)
+
+            if first_iteration == False:
+                send_kd_and_reaction(now)
+                wait_16_minutes(start_time)
             
         except Exception as e:
             __failed = True
