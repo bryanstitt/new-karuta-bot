@@ -165,12 +165,11 @@ def wait_16_minutes(start_time):
 
 def execute_loop(offset_minutes):
     execution_minutes = [0, 15, 30, 45]  # minutes in the hour when to execute (before offset)
-
     execution_times = [(minute + offset_minutes) % 60 for minute in execution_minutes]
 
     first_iteration = True
-
     __failed = False
+
     while True:
         try:
             start_time = time.time()
@@ -181,7 +180,7 @@ def execute_loop(offset_minutes):
 
             executed_first_iteration = False
 
-            if first_iteration and (__failed or ((current_minute % 60) in execution_times and current_second == 0)):
+            if __failed or (first_iteration and (current_minute % 60) in execution_times and current_second == 0):
                 send_kd_and_reaction(now)
                 __failed = False
                 first_iteration = False
