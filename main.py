@@ -172,6 +172,8 @@ def execute_loop(offset_minutes):
                 time.sleep(5)
 
                 send_reaction((index, ed))
+                
+                cooldown_offset += 5
             else: time.sleep(0.5)
             
         except Exception as e:
@@ -184,8 +186,6 @@ def execute_loop(offset_minutes):
             LOGGER.info(f"Retrying in {__error_delay} seconds...")
             time.sleep(__error_delay)
             get_channel(guild_id, channel_id) # core of the fix
-        
-        else: cooldown_offset += 5 # add +5 sec to cron each time it runs successfully
 
 # Main execution
 if __name__ == "__main__":
