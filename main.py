@@ -247,5 +247,6 @@ if __name__ == "__main__":
             print(f"Failed to send ready message. Retrying in {__failure_delay} seconds...")
             LOGGER.warning(f"Failed to send ready message. Retrying in {__failure_delay} seconds...")
             time.sleep(__failure_delay)
+            get_channel(guild_id, channel_id)
 
     execute_loop(offset_minutes)
