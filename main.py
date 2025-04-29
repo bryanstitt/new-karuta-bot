@@ -57,7 +57,7 @@ def login(email, password):
     LOGGER.info("Triggered log in click.")
     
 
-def send_msg():
+def send_msg(trigger="kd"):
     try:
         wait = WebDriverWait(driver, 15)
 
@@ -253,10 +253,10 @@ if __name__ == "__main__":
             print("Bot is ready to go!")
             LOGGER.info("Bot is ready to go!")
             break
-        except Exception as e:
+        except:
             __failure_delay = 5
-            print(f"Failed to send ready message. Retrying in {__failure_delay} seconds... ({e})")
-            LOGGER.warning(f"Failed to send ready message. Retrying in {__failure_delay} seconds... ({e})")
+            print(f"Failed to send ready message. Retrying in {__failure_delay} seconds...")
+            LOGGER.warning(f"Failed to send ready message. Retrying in {__failure_delay} seconds...")
             time.sleep(__failure_delay)
             get_channel(guild_id, channel_id)
 
