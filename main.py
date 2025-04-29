@@ -176,6 +176,7 @@ def execute_loop(offset_minutes):
             
         except Exception as e:
             __failed = True
+            last_execution_minute = -1
             __error_delay = 5
             print(f"Error: {e}")
             LOGGER.error(f"Error: {e}")
