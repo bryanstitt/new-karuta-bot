@@ -151,7 +151,7 @@ def execute_loop(offset_minutes):
         try:
             now = datetime.now()
             current_minute = now.minute
-            current_second = now.second + cooldown_offset
+            current_second = now.second - cooldown_offset
 
             if __failed or (current_minute in execution_times and current_second % 60 == 0) and current_minute != last_execution_minute:
                 __failed = False
