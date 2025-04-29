@@ -169,7 +169,6 @@ def execute_loop(offset_minutes):
     execution_times = [(minute + offset_minutes) % 60 for minute in execution_minutes]
 
     first_iteration = True
-    executed = False
 
     __failed = False
     while True:
@@ -180,20 +179,22 @@ def execute_loop(offset_minutes):
             current_minute = now.minute
             current_second = now.second
 
+            executed_first_iteration = False
+
             if first_iteration and (__failed or ((current_minute % 60) in execution_times and current_second == 0)):
                 send_kd_and_reaction(now)
                 __failed = False
                 first_iteration = False
-                executed = True
+                executed_first_iteration = True
                 wait_16_minutes(start_time) 
 
-            if not first_iteration and not executed:
+            if not first_iteration and not executed_first_iteration:
                 send_kd_and_reaction(now)
                 wait_16_minutes(start_time)
             
-            if not executed:
+            if not executed_first_iteration:
                 time.sleep(0.5)
-                
+
         except Exception as e:
             __failed = True
             __error_delay = 5
