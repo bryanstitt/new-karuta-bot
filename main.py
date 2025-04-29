@@ -146,8 +146,6 @@ def execute_loop(offset_minutes):
 
     __failed = False
     cooldown_offset_minutes = 0
-    cooldown_offset_seconds = 0
-    last_execution_minute = -1
     while True:
         try:
             now = datetime.now()
@@ -156,9 +154,9 @@ def execute_loop(offset_minutes):
             # If we add it, it would run that many minutes/seconds earlier than the cron schedule.
             # Subtracting makes it run that many minutes/seconds later than the cron schedule.
             current_minute = now.minute - cooldown_offset_minutes
-            current_second = now.second - cooldown_offset_seconds
+            current_second = now.second
 
-            if __failed or (current_minute in execution_times and current_second % 60 == 0) and current_minute != last_execution_minute:
+            if __failed or ((current_minute % 60) in execution_times and current_second == 0):
                 # It's time to execute!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 print(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
                 LOGGER.info(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
@@ -176,28 +174,8 @@ def execute_loop(offset_minutes):
 
                 send_reaction((index, ed))
                 
-                
-                '''
-                
-                Offset Logic
-                
-                Offset starts at 0 for minutes and seconds. Each iteration of this code
-                the seconds offset is increased by 5 seconds. Once the seconds offset reaches 60
-                seconds it is reset to 0 and the minutes offset is increased by 1 minute.
-                Once the minutes offset reaches 15 minutes it is reset to 0. We have now
-                completed a full 15 minute cycle and we can reset back to the beginning, as per
-                the cron schedule: [0, 15, 30, 45] minutes in the hour.
-                
-                '''
-                cooldown_offset_seconds += 5
-                if cooldown_offset_seconds >= 60:
-                    cooldown_offset_seconds = 0
-                    cooldown_offset_minutes += 1
-                    if cooldown_offset_minutes >= 15:
-                        cooldown_offset_minutes = 0
-                
+                cooldown_offset_minutes += 1
                 __failed = False
-                last_execution_minute = current_minute
             else: time.sleep(0.5)
             
         except Exception as e:
