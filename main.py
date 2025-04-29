@@ -9,6 +9,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import time
 import os
 import random
+from sys import exit
 from dotenv import load_dotenv
 import requests
 from get_best_position import get_best_position
@@ -258,6 +259,7 @@ if __name__ == "__main__":
             LOGGER.info("Bot is ready to go!")
             break
         except Exception as e:
+            if _ >= 19: exit(1)
             __failure_delay = 5
             print(f"Failed to send ready message. Retrying in {__failure_delay} seconds... ({e})")
             LOGGER.warning(f"Failed to send ready message. Retrying in {__failure_delay} seconds... ({e})")
