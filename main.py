@@ -179,7 +179,7 @@ def execute_loop(offset_minutes):
             current_minute = now.minute
             current_second = now.second
 
-            if __failed or ((current_minute % 60) in execution_times and current_second == 0):
+            if first_iteration and (__failed or ((current_minute % 60) in execution_times and current_second == 0)):
                 send_kd_and_reaction(now)
                 __failed = False
                 first_iteration = False
