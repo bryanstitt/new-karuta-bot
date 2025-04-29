@@ -57,7 +57,7 @@ def login(email, password):
     LOGGER.info("Triggered log in click.")
     
 
-def send_kd(trigger="kd"):
+def send_msg(trigger="kd"):
     try:
         wait = WebDriverWait(driver, 15)
 
@@ -164,7 +164,7 @@ def execute_loop(offset_minutes):
                 LOGGER.info(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
                 time.sleep(2)
 
-                send_kd()
+                send_msg()
 
                 message = wait_and_get_karuta_message()
                 download_image_from_message(message)
@@ -247,5 +247,27 @@ if __name__ == "__main__":
     time.sleep(random.uniform(1, 2))
     
     driver.save_screenshot('channel-view.png')
+    
+    # Get buggy Pterodactyl shit out of the way
+    while True:
+        try:
+            send_msg(
+                trigger=[
+                    "Logged in",
+                    "Connected",
+                    "Initialized",
+                    "Ready to go",
+                    "All set",
+                    "All systems go",
+                ][random.randint(0, 5)]
+            )
+            print("Bot is ready to go!")
+            LOGGER.info("Bot is ready to go!")
+            break
+        except:
+            __failure_delay = 5
+            print(f"Failed to send ready message. Retrying in {__failure_delay} seconds...")
+            LOGGER.warning(f"Failed to send ready message. Retrying in {__failure_delay} seconds...")
+            time.sleep(__failure_delay)
 
     execute_loop(offset_minutes)
