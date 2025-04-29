@@ -180,7 +180,6 @@ def execute_loop(offset_minutes):
             
         except Exception as e:
             __failed = True
-            last_execution_minute = -1
             __error_delay = 5
             print(f"Error: {e}")
             LOGGER.error(f"Error: {e}")
@@ -227,7 +226,7 @@ if __name__ == "__main__":
     driver.save_screenshot('channel-view.png')
     
     # Get buggy Pterodactyl shit out of the way
-    while True:
+    for _ in range(20):
         try:
             send_msg(
                 trigger=[
