@@ -154,8 +154,6 @@ def execute_loop(offset_minutes):
             current_second = now.second - cooldown_offset
 
             if __failed or (current_minute in execution_times and current_second % 60 == 0) and current_minute != last_execution_minute:
-                __failed = False
-                last_execution_minute = current_minute
                 # It's time to execute!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 print(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
                 LOGGER.info(f"Executing{' previously failed' if __failed else ''} task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
@@ -174,6 +172,8 @@ def execute_loop(offset_minutes):
                 send_reaction((index, ed))
                 
                 cooldown_offset += 5
+                __failed = False
+                last_execution_minute = current_minute
             else: time.sleep(0.5)
             
         except Exception as e:
