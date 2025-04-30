@@ -16,7 +16,29 @@ from get_best_position import get_best_position
 import logging
 from datetime import datetime, timedelta
 
-#setup logging
+
+########################################################################################################################
+
+'''
+Get credentials from environment variables
+'''
+
+load_dotenv()
+EMAIL = os.getenv('DISCORD_EMAIL')
+PASSWORD = os.getenv('DISCORD_PASSWORD')
+GUILD_ID = os.getenv('DISCORD_GUILD_ID')
+CHANNEL_ID = os.getenv('DISCORD_CHANNEL_ID')
+OFFSET_MINUTES = int(os.getenv('CRON_OFFSET')) 
+BOT_NAME = os.getenv("BOT_NAME")
+
+
+
+########################################################################################################################
+
+'''
+Setup Logger
+'''
+
 log_level = os.getenv('LOG_LEVEL', 20)
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.WARNING if log_level is None else int(log_level)) # default log level is WARNING
@@ -24,29 +46,38 @@ handler = logging.FileHandler(filename='log.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(filename)s:%(lineno)s: %(message)s'))
 LOGGER.addHandler(handler)
 
+
+########################################################################################################################
+
+'''
+Setup Selenium WebDriver
+'''
+
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
-
-# Set up the WebDriver
 # service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
 service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
 actions = ActionChains(driver)
 
-# Login to Discord
-def login(email, password):
-    driver.get('https://discord.com/login')
+
+########################################################################################################################
+
+
+
+def login():
+    driver.get(f"https://discord.com/login?redirect_to=%2Fchannels%2F{GUILD_ID}%2F{CHANNEL_ID}")
     
-    # Wait until email and password fields are available
+    # Wait until email and PASSWORD fields are available
     wait = WebDriverWait(driver, 10)
     email_input = wait.until(EC.presence_of_element_located((By.NAME, 'email')))
     password_input = wait.until(EC.presence_of_element_located((By.NAME, 'password')))
     
-    email_input.send_keys(email)
-    password_input.send_keys(password)
+    email_input.send_keys(EMAIL)
+    password_input.send_keys(PASSWORD)
 
     time.sleep(3)
     
@@ -73,30 +104,58 @@ def send_msg(trigger="kd"):
         LOGGER.info(f"Sent message: {trigger}")
         print(f"Sent message: {trigger}")
 
+        return time.time()
+
     except Exception as e: raise Exception(f"Failed to send kd: {e}")
 
-def wait_and_get_karuta_message(wait_time=8):
-    print(f"Waiting {wait_time} seconds before checking for Karuta message...")
-    LOGGER.info(f"Waiting {wait_time} seconds before checking for Karuta message...")
+def wait_and_click_reaction(sent_kd_time):
+    # print(f"Waiting {wait_time} seconds before checking for Karuta message...")
+    # LOGGER.info(f"Waiting {wait_time} seconds before checking for Karuta message...")
     
-    time.sleep(wait_time)
+    # time.sleep(wait_time)
+
+    def get_message_timestamp(message_element):
+        try:
+            # Adjust this to match your actual timestamp element class/attribute
+            timestamp_el = message_element.find_element(By.XPATH, ".//time")
+            return datetime.fromisoformat(timestamp_el.get_attribute("datetime").replace("Z", "+00:00")).timestamp()
+        except Exception as e:
+            print(f"Could not get timestamp: {e}")
+            return 0
+
+    def find_valid_mention(driver):
+        mentions = driver.find_elements(By.XPATH, f"//span[contains(@class, 'mention') and text()='@{BOT_NAME}']")
+        for mention in reversed(mentions):
+            message = mention.find_element(By.XPATH, "./ancestor::div[contains(@class, 'message__')]")
+            msg_time = get_message_timestamp(message)
+            if msg_time > sent_kd_time:
+                return message
+        return None
     
     try:
-        # After waiting, get the latest messages
-        messages = driver.find_elements(By.CLASS_NAME, "message__5126c")
-        
-        for message in reversed(messages):  # Check from newest to oldest
-            try:
-                username = message.find_element(By.CLASS_NAME, "username_c19a55").text
-                if username.lower() == "karuta":
-                    print("Found message from Karuta.")
-                    LOGGER.error(f"Found message from Karuta.")
-                    return message
-            except:
-                continue  # If username not found, skip
-    except Exception as e: raise Exception(f"Failed to retrieve Karuta messages: {e}")
-    
-    raise ValueError("No Karuta message found after waiting.")
+        print(f"Waiting for a message that mentions @{BOT_NAME}...")
+        msg = WebDriverWait(driver, 30).until(find_valid_mention)
+        print("Found valid mention after kd.")
+
+        download_image_from_message(msg)
+
+        index, ed = get_best_position()
+        LOGGER.info(f"Best position: {index+1}, ED: {ed}")
+
+        # print("Waiting 5 seconds before reacting...")
+        # time.sleep(5)
+
+        WebDriverWait(driver, 10).until(
+            lambda d: len(msg.find_elements(By.CLASS_NAME, "reactionInner__23977")) >= 4
+        )
+
+        reactions = msg.find_elements(By.CLASS_NAME, "reactionInner__23977")
+        print(f"Clicking reaction at index {index}")
+        reactions[index].click()
+        print("Reaction clicked successfully.")
+    except Exception as e:
+        print(f"ERROR: An exception occurred during wait_and_click: {e}")
+
 
 def download_image_from_message(message_element):
     try:
@@ -113,50 +172,17 @@ def download_image_from_message(message_element):
         LOGGER.info("Image downloaded as discord_image.png")
     except Exception as e: raise Exception(f"Failed to download image: {e}")
 
-def send_reaction(index_ed_tuple):
-    try:
-        index, ed = index_ed_tuple
-        print(f"Sending reaction for card {index+1} with ED: {ed}")
-        LOGGER.info(f"Sending reaction for card {index-1} with ED: {ed}")
-
-        message_box = driver.find_element("xpath", '//div[@role="textbox"]')
-        match index:
-            case 0:
-                message_box.send_keys('+:one:')
-            case 1:
-                message_box.send_keys('+:two:')
-            case 2:
-                message_box.send_keys('+:three:')
-            case 3:
-                message_box.send_keys('+:four:')
-        
-        message_box.send_keys(Keys.ENTER)
-        time.sleep(3)
-
-        if ed == 7:
-            message_box.send_keys('klu')
-            message_box.send_keys(Keys.ENTER)            
-    except Exception as e: raise Exception(f"Failed to send reaction: {e}")
-
-def get_channel(guild_id, channel_id): driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}')
+def get_channel(): driver.get(f'https://discord.com/channels/{GUILD_ID}/{CHANNEL_ID}')
 
 def send_kd_and_reaction(now):
-    # It's time to execute!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # It's time to execute!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     print(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
     LOGGER.info(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
     time.sleep(2)
 
-    send_msg("kd")
+    sent_kd_time = send_msg("kd")
 
-    message = wait_and_get_karuta_message()
-    download_image_from_message(message)
-
-    index, ed = get_best_position()
-    LOGGER.info(f"Best position: {index+1}, ED: {ed}")
-
-    time.sleep(5)
-
-    send_reaction((index, ed))
+    wait_and_click_reaction(sent_kd_time)
 
 def wait_16_minutes(start_time):
     interval = 16 * 60  # 16 minutes = 960 seconds
@@ -164,9 +190,9 @@ def wait_16_minutes(start_time):
     sleep_time = max(0, interval - elapsed)
     time.sleep(sleep_time)
 
-def execute_loop(offset_minutes):
+def execute_loop():
     execution_minutes = [0, 15, 30, 45]  # minutes in the hour when to execute (before offset)
-    execution_times = [(minute + offset_minutes) % 60 for minute in execution_minutes]
+    execution_times = [(minute + OFFSET_MINUTES) % 60 for minute in execution_minutes]
 
     first_iteration = True
     __failed = False
@@ -203,25 +229,18 @@ def execute_loop(offset_minutes):
             print(f"Retrying in {__error_delay} seconds...")
             LOGGER.info(f"Retrying in {__error_delay} seconds...")
             time.sleep(__error_delay)
-            get_channel(guild_id, channel_id) # core of the fix
+            get_channel() # core of the fix
 
-# Main execution
+
 if __name__ == "__main__":
-    load_dotenv()
-    # Get credentials from environment variables
-    email = os.getenv('DISCORD_EMAIL')
-    password = os.getenv('DISCORD_PASSWORD')
-    guild_id = os.getenv('DISCORD_GUILD_ID')
-    channel_id = os.getenv('DISCORD_CHANNEL_ID')
-    offset_minutes = int(os.getenv('CRON_OFFSET')) 
     
-    if not email or not password:
+    if not EMAIL or not PASSWORD:
         raise ValueError("Please set your Discord email and password in the environment variables.")
     
     # try to login 3 times
     for _ in range(3):
         try:
-            login(email, password)
+            login()
             break # Exit the loop if login is successful
         except Exception as e:
             __login_delay = 5
@@ -235,12 +254,6 @@ if __name__ == "__main__":
     time.sleep(random.uniform(5, 8))
 
     driver.save_screenshot('post-login.png')
-
-    get_channel(guild_id, channel_id)
-
-    time.sleep(random.uniform(1, 2))
-    
-    driver.save_screenshot('channel-view.png')
     
     # Get buggy Pterodactyl shit out of the way
     for _ in range(20):
@@ -264,6 +277,6 @@ if __name__ == "__main__":
             print(f"Failed to send ready message. Retrying in {__failure_delay} seconds... ({e})")
             LOGGER.warning(f"Failed to send ready message. Retrying in {__failure_delay} seconds... ({e})")
             time.sleep(__failure_delay)
-            get_channel(guild_id, channel_id)
+            get_channel()
 
-    execute_loop(offset_minutes)
+    execute_loop()
