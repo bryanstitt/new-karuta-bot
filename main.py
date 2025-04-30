@@ -54,12 +54,12 @@ Setup Selenium WebDriver
 '''
 
 chrome_options = Options()
-# chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
-service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
-# service = Service('/usr/bin/chromedriver')
+# service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
+service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
 actions = ActionChains(driver)
 
@@ -108,7 +108,13 @@ def send_msg(trigger="kd"):
 
     except Exception as e: raise Exception(f"Failed to send kd: {e}")
 
-def get_message_timestamp(message_element):
+def wait_and_click_reaction(sent_kd_time):
+    # print(f"Waiting {wait_time} seconds before checking for Karuta message...")
+    # LOGGER.info(f"Waiting {wait_time} seconds before checking for Karuta message...")
+    
+    # time.sleep(wait_time)
+
+    def get_message_timestamp(message_element):
         try:
             # Adjust this to match your actual timestamp element class/attribute
             timestamp_el = message_element.find_element(By.XPATH, ".//time")
@@ -117,24 +123,18 @@ def get_message_timestamp(message_element):
             print(f"Could not get timestamp: {e}")
             return 0
 
-def find_valid_mention(sent_kd_time):
-    mentions = driver.find_elements(By.XPATH, f"//span[contains(@class, 'mention') and text()='@{BOT_NAME}']")
-    for mention in reversed(mentions):
-        message = mention.find_element(By.XPATH, "./ancestor::div[contains(@class, 'message__')]")
-        msg_time = get_message_timestamp(message)
-        if msg_time > sent_kd_time:
-            return message
-    return None
-
-def wait_and_click_reaction(sent_kd_time):
-    # print(f"Waiting {wait_time} seconds before checking for Karuta message...")
-    # LOGGER.info(f"Waiting {wait_time} seconds before checking for Karuta message...")
-    
-    # time.sleep(wait_time)
+    def find_valid_mention(driver):
+        mentions = driver.find_elements(By.XPATH, f"//span[contains(@class, 'mention') and text()='@{BOT_NAME}']")
+        for mention in reversed(mentions):
+            message = mention.find_element(By.XPATH, "./ancestor::div[contains(@class, 'message__')]")
+            msg_time = get_message_timestamp(message)
+            if msg_time > sent_kd_time:
+                return message
+        return None
     
     try:
         print(f"Waiting for a message that mentions @{BOT_NAME}...")
-        msg = WebDriverWait(driver, 30).until(find_valid_mention(sent_kd_time))
+        msg = WebDriverWait(driver, 30).until(find_valid_mention)
         print("Found valid mention after kd.")
 
         download_image_from_message(msg)
