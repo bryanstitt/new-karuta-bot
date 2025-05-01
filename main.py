@@ -132,9 +132,15 @@ def wait_and_click_reaction(sent_kd_time):
         return None
 
     try:
-        print_log(f"Waiting for a message that mentions @{BOT_NAME}...")
-        msg = WebDriverWait(driver, 30).until(find_valid_mention)
-        print_log("Found valid mention after kd.")
+        for _ in range(3):
+            try:
+                print_log(f"Waiting for a message that mentions @{BOT_NAME}...")
+                msg = WebDriverWait(driver, 30).until(find_valid_mention)
+                print_log("Found valid mention after kd.")
+                break
+            except StaleElementReferenceException:
+                print("Retrying wait due to stale element...")
+                time.sleep(1)
 
         download_image_from_message(msg)
 
