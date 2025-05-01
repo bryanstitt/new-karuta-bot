@@ -108,7 +108,7 @@ def send_msg(trigger="kd"):
     except Exception as e: raise Exception(f"Failed to send kd: {e}")
 
 def print_log(message):
-    print_log(message)
+    print(message)
     LOGGER.info(message)
 
 def wait_and_click_reaction(sent_kd_time):
