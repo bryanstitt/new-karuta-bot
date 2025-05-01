@@ -24,22 +24,33 @@ def wait_16_minutes(start_time):
 
 def execute_loop(driver, log):
     times = [(m + OFFSET_MINUTES) % 60 for m in [0, 15, 30, 45]]
-    first = True
+    first_iteration = True
     failed = False
 
     while True:
         try:
             start = time.time()
             now = datetime.now()
-            if failed or (first and now.minute % 60 in times and now.second == 0):
+
+            executed_first_iteration = False
+
+            if failed or (first_iteration and now.minute % 60 in times and now.second == 0):
                 send_kd_and_reaction(driver, log)
-                first = False
+                first_iteration = False
                 failed = False
+                executed_first_iteration = True
                 wait_16_minutes(start)
-            else:
+            
+            if not first_iteration and not executed_first_iteration:
+                send_kd_and_reaction(now)
+                wait_16_minutes(start)
+
+            if not executed_first_iteration:
                 time.sleep(0.5)
+
         except Exception as e:
             log(f"Loop error: {e}")
+            log("Retrying in 5 seconds...")
             time.sleep(5)
             get_channel(driver)
             failed = True

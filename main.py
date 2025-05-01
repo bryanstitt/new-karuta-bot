@@ -33,7 +33,7 @@ if __name__ == "__main__":
             send_msg(driver, random.choice([
                 "Logged in", "Connected", "Initialized", "Ready to go", "All set", "All systems go"
             ]), log)
-            log("Bot is ready.")
+            log("Bot is ready to go!")
             break
         except Exception as e:
             if _ >= 19: exit(1)
