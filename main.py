@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import StaleElementReferenceException
 import time
 import os
 import random
@@ -85,8 +86,7 @@ def login():
     login_button = driver.find_element(By.XPATH, '//button[@type="submit"]')
     login_button.click()
     
-    print("Triggered log in click.")
-    LOGGER.info("Triggered log in click.")
+    print_log("Triggered log in click.")
     
 
 def send_msg(trigger="kd"):
@@ -101,18 +101,17 @@ def send_msg(trigger="kd"):
         input_box.send_keys(trigger)
         input_box.send_keys(Keys.ENTER)
 
-        LOGGER.info(f"Sent message: {trigger}")
-        print(f"Sent message: {trigger}")
+        print_log(f"Sent message: {trigger}")
 
         return time.time()
 
     except Exception as e: raise Exception(f"Failed to send kd: {e}")
 
+def print_log(message):
+    print_log(message)
+    LOGGER.info(message)
+
 def wait_and_click_reaction(sent_kd_time):
-    # print(f"Waiting {wait_time} seconds before checking for Karuta message...")
-    # LOGGER.info(f"Waiting {wait_time} seconds before checking for Karuta message...")
-    
-    # time.sleep(wait_time)
 
     def get_message_timestamp(message_element):
         try:
@@ -120,7 +119,7 @@ def wait_and_click_reaction(sent_kd_time):
             timestamp_el = message_element.find_element(By.XPATH, ".//time")
             return datetime.fromisoformat(timestamp_el.get_attribute("datetime").replace("Z", "+00:00")).timestamp()
         except Exception as e:
-            print(f"Could not get timestamp: {e}")
+            print_log(f"Could not get timestamp: {e}")
             return 0
 
     def find_valid_mention(driver):
@@ -131,58 +130,61 @@ def wait_and_click_reaction(sent_kd_time):
             if msg_time > sent_kd_time:
                 return message
         return None
-    
+
     try:
-        print(f"Waiting for a message that mentions @{BOT_NAME}...")
+        print_log(f"Waiting for a message that mentions @{BOT_NAME}...")
         msg = WebDriverWait(driver, 30).until(find_valid_mention)
-        print("Found valid mention after kd.")
+        print_log("Found valid mention after kd.")
 
         download_image_from_message(msg)
 
         index, ed = get_best_position()
-        LOGGER.info(f"Best position: {index+1}, ED: {ed}")
+        print_log(f"Best position: {index+1}, ED: {ed}")
 
-        # print("Waiting 5 seconds before reacting...")
-        # time.sleep(5)
+        for _ in range(3):
+            try:
+                WebDriverWait(driver, 10).until(
+                    lambda d: len(msg.find_elements(By.CLASS_NAME, "reactionInner__23977")) >= 4
+                )
 
-        WebDriverWait(driver, 10).until(
-            lambda d: len(msg.find_elements(By.CLASS_NAME, "reactionInner__23977")) >= 4
-        )
+                reactions = msg.find_elements(By.CLASS_NAME, "reactionInner__23977")
+                print_log(f"Clicking reaction at index {index}")
+                reactions[index].click()
+                print_log("Reaction clicked successfully.")
+                break
+            except StaleElementReferenceException:
+                print_log("Element went stale, refinding...")
+                msg = find_valid_mention(driver)
 
-        reactions = msg.find_elements(By.CLASS_NAME, "reactionInner__23977")
-        print(f"Clicking reaction at index {index}")
-        reactions[index].click()
-        print("Reaction clicked successfully.")
     except Exception as e:
-        print(f"ERROR: An exception occurred during wait_and_click: {e}")
+        print_log(f"ERROR: An exception occurred during wait_and_click: {e}")
 
 
 def download_image_from_message(message_element):
     try:
         link = message_element.find_element(By.TAG_NAME, "a")
         href = link.get_attribute("href")
-        print(f"Downloading image from: {href}")
-        LOGGER.info(f"Downloading image from: {href}")
+        print_log(f"Downloading image from: {href}")
         r = requests.get(href)
 
         with open("discord_image.png", "wb") as f:
             f.write(r.content)
 
-        print("Image downloaded as discord_image.png")
-        LOGGER.info("Image downloaded as discord_image.png")
+        print_log("Image downloaded as discord_image.png")
     except Exception as e: raise Exception(f"Failed to download image: {e}")
 
 def get_channel(): driver.get(f'https://discord.com/channels/{GUILD_ID}/{CHANNEL_ID}')
 
 def send_kd_and_reaction(now):
     # It's time to execute!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    print(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
-    LOGGER.info(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    print_log(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
     time.sleep(2)
 
     sent_kd_time = send_msg("kd")
 
     wait_and_click_reaction(sent_kd_time)
+
+    send_msg("kt burn")
 
 def wait_16_minutes(start_time):
     interval = 16 * 60  # 16 minutes = 960 seconds
@@ -201,7 +203,7 @@ def execute_loop():
         try:
             start_time = time.time()
             now = datetime.now()
-            
+
             current_minute = now.minute
             current_second = now.second
 
@@ -224,10 +226,8 @@ def execute_loop():
         except Exception as e:
             __failed = True
             __error_delay = 5
-            print(f"Error: {e}")
-            LOGGER.error(f"Error: {e}")
-            print(f"Retrying in {__error_delay} seconds...")
-            LOGGER.info(f"Retrying in {__error_delay} seconds...")
+            print_log(f"Error: {e}")
+            print_log(f"Retrying in {__error_delay} seconds...")
             time.sleep(__error_delay)
             get_channel() # core of the fix
 
@@ -244,10 +244,8 @@ if __name__ == "__main__":
             break # Exit the loop if login is successful
         except Exception as e:
             __login_delay = 5
-            print(f"Error during login: {e}")
-            LOGGER.error(f"Error during login: {e}")
-            print(f"Retrying login in {__login_delay} seconds...")
-            LOGGER.info(f"Retrying login in {__login_delay} seconds...")
+            print_log(f"Error during login: {e}")
+            print_log(f"Retrying login in {__login_delay} seconds...")
             time.sleep(__login_delay)
     
     # Add a delay to handle any dynamic content loading
@@ -268,14 +266,12 @@ if __name__ == "__main__":
                     "All systems go",
                 ][random.randint(0, 5)]
             )
-            print("Bot is ready to go!")
-            LOGGER.info("Bot is ready to go!")
+            print_log("Bot is ready to go!")
             break
         except Exception as e:
             if _ >= 19: exit(1)
             __failure_delay = 5
-            print(f"Failed to send ready message. Retrying in {__failure_delay} seconds... ({e})")
-            LOGGER.warning(f"Failed to send ready message. Retrying in {__failure_delay} seconds... ({e})")
+            print_log(f"Failed to send ready message. Retrying in {__failure_delay} seconds... ({e})")
             time.sleep(__failure_delay)
             get_channel()
 
