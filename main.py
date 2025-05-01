@@ -184,6 +184,8 @@ def send_kd_and_reaction(now):
 
     wait_and_click_reaction(sent_kd_time)
 
+    time.sleep(3)
+
     send_msg("kt burn")
 
 def wait_16_minutes(start_time):
