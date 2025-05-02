@@ -3,8 +3,7 @@ import time
 
 from datetime import datetime
 from dotenv import load_dotenv
-from Message.Backend import download_image_from_message
-from Message.ImageAnalysis import get_best_position
+from Message.ImageAnalysis import get_best_position, download_image_from_message
 from selenium import webdriver # Selenium WebDriver; used for Syntax Highlighting in this file
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By

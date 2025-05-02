@@ -76,3 +76,14 @@ def get_ed_and_count(im, left, top, right, bottom) -> None:
         return count, ed
     except:
         return 1, 1
+
+
+
+def download_image_from_message(message_element, log) -> None:
+    link = message_element.find_element(By.TAG_NAME, "a")
+    href = link.get_attribute("href")
+    log(f"Downloading image from: {href}")
+    r = requests.get(href)
+    with open("discord_image.png", "wb") as f:
+        f.write(r.content)
+    log("Image downloaded as discord_image.png")

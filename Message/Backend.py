@@ -1,6 +1,6 @@
 import os # environment variables
 import time
-import requests
+import requests # API, tbd
 
 from datetime import datetime
 from dotenv import load_dotenv # load environment variables
@@ -47,17 +47,6 @@ def send_msg(driver: webdriver.Chrome, trigger, log) -> float:
     input_box.send_keys(Keys.ENTER)
     log(f"Sent message: {trigger}")
     return time.time()
-
-
-
-def download_image_from_message(message_element, log) -> None:
-    link = message_element.find_element(By.TAG_NAME, "a")
-    href = link.get_attribute("href")
-    log(f"Downloading image from: {href}")
-    r = requests.get(href)
-    with open("discord_image.png", "wb") as f:
-        f.write(r.content)
-    log("Image downloaded as discord_image.png")
 
 
 
