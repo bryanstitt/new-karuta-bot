@@ -94,7 +94,7 @@ functions from all parts of the bot
 
 
 def execute_loop(driver):
-    times = [(m + os.getenv('CRON_OFFSET')) % 60 for m in [0, 15, 30, 45]]
+    times = [(m + OFFSET_MINUTES) % 60 for m in [0, 15, 30, 45]]
     first_iteration = True
     failed = False
 
