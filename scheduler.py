@@ -1,5 +1,4 @@
 import time
-import random
 from datetime import datetime
 from message_utils import send_msg
 from reaction_handler import wait_and_click_reaction
@@ -42,7 +41,7 @@ def execute_loop(driver, log):
                 wait_16_minutes(start)
             
             if not first_iteration and not executed_first_iteration:
-                send_kd_and_reaction(now, log)
+                send_kd_and_reaction(driver, log)
                 wait_16_minutes(start)
 
             if not executed_first_iteration:
