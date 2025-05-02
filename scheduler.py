@@ -42,7 +42,7 @@ def execute_loop(driver, log):
                 wait_16_minutes(start)
             
             if not first_iteration and not executed_first_iteration:
-                send_kd_and_reaction(now)
+                send_kd_and_reaction(now, log)
                 wait_16_minutes(start)
 
             if not executed_first_iteration:
