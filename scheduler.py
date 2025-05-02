@@ -4,6 +4,8 @@ from message_utils import send_msg
 from reaction_handler import wait_and_click_reaction
 from config import OFFSET_MINUTES
 from config import GUILD_ID, CHANNEL_ID
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 
 def get_channel(driver):
     driver.get(f'https://discord.com/channels/{GUILD_ID}/{CHANNEL_ID}')
@@ -11,10 +13,18 @@ def get_channel(driver):
 def send_kd_and_reaction(driver, log):
     now = datetime.now()
     log(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
-    time.sleep(2)
+
+    for _ in range(3): # this is to avoid "jump to present message" bug
+        ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+        time.sleep(0.2)
+
+    time.sleep(1)
+
     sent_kd_time = send_msg(driver, "kd", log)
     wait_and_click_reaction(driver, sent_kd_time, log)
+
     time.sleep(3)
+    
     send_msg(driver, "kt burn", log)
 
 def wait_16_minutes(start_time):
