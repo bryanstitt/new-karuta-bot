@@ -1,13 +1,19 @@
+import os
 import time
+
+from datetime import datetime
+from dotenv import load_dotenv
+from Message.Backend import download_image_from_message
+from Message.ImageAnalysis import get_best_position
+from selenium import webdriver # Selenium WebDriver; used for Syntax Highlighting in this file
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from datetime import datetime
-from config import BOT_NAME
-from message_utils import download_image_from_message
-from get_best_position import get_best_position
+load_dotenv()
 
-def wait_and_click_reaction(driver, sent_kd_time, log):
+
+
+def wait_and_click_reaction(driver: webdriver.Chrome, sent_kd_time, log):
     def get_message_timestamp(msg_el):
         try:
             time_el = msg_el.find_element(By.XPATH, ".//time")
@@ -16,8 +22,8 @@ def wait_and_click_reaction(driver, sent_kd_time, log):
             log(f"Could not get timestamp: {e}")
             return 0
 
-    def find_valid_mention(driver):
-        mentions = driver.find_elements(By.XPATH, f"//span[contains(@class, 'mention') and text()='@{BOT_NAME}']")
+    def find_valid_mention(driver: webdriver.Chrome):
+        mentions = driver.find_elements(By.XPATH, f"//span[contains(@class, 'mention') and text()='@{os.getenv('BOT_NAME')}']")
         for mention in reversed(mentions):
             try:
                 message = mention.find_element(By.XPATH, "./ancestor::div[contains(@class, 'message__')]")
@@ -31,7 +37,7 @@ def wait_and_click_reaction(driver, sent_kd_time, log):
     try:
         for _ in range(3):
             try:
-                log(f"Waiting for message mentioning @{BOT_NAME}...")
+                log(f"Waiting for message mentioning @{os.getenv('BOT_NAME')}...")
                 msg = WebDriverWait(driver, 30).until(find_valid_mention)
                 log("Found valid mention.")
                 break

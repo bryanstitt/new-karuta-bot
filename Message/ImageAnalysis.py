@@ -1,8 +1,21 @@
-import re
-from PIL import Image, ImageOps
-import pytesseract
+'''
 
-def get_best_position():
+This script is used to analyze the image of a Discord message and extract the best position for a response.
+
+Requires pytesseract and PIL (Pillow) libraries.
+
+'''
+
+
+
+import pytesseract
+import re
+
+from PIL import Image, ImageOps
+
+
+
+def get_best_position() -> None:
     try:
         # pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
         im = ImageOps.grayscale(Image.open('discord_image.png'))
@@ -30,7 +43,8 @@ def get_best_position():
         return 0, 0
 
 
-def get_ed_and_count(im, left, top, right, bottom):
+
+def get_ed_and_count(im, left, top, right, bottom) -> None:
     try:
         new_im = im.crop((left, top, right, bottom))
         # new_im.show()
