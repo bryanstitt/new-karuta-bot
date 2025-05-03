@@ -10,8 +10,10 @@ Requires pytesseract and PIL (Pillow) libraries.
 
 import pytesseract
 import re
+import requests
 
 from PIL import Image, ImageOps
+from selenium.webdriver.common.by import By
 
 
 
