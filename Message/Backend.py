@@ -54,10 +54,6 @@ def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
     now = datetime.now()
     log(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    for _ in range(3): # this is to avoid "jump to present message" bug
-        ActionChains(driver).send_keys(Keys.ESCAPE).perform()
-        time.sleep(0.2)
-
     time.sleep(1)
 
     sent_kd_time = send_msg(driver, "kd", log)

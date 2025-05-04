@@ -5,12 +5,10 @@ Main file for KGBot.
 '''
 
 
-
-import logging # log files
 import os # environment variables
 import random
 import time
-
+from Message.Logging import setup_logging, cleanup_old_logs # log files
 from datetime import datetime
 from dotenv import load_dotenv # load environment variables
 from Message.Backend import get_channel
@@ -32,15 +30,9 @@ load_dotenv() # load environment variables
 Logger setup
 
 '''
-
-log_level = os.getenv('LOG_LEVEL', 20)
-LOGGER = logging.getLogger()
-LOGGER.setLevel(logging.WARNING if log_level is None else int(log_level)) # default log level is WARNING
-handler = logging.FileHandler(filename='log.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(filename)s:%(lineno)s: %(message)s'))
-LOGGER.addHandler(handler)
+LOGGER = setup_logging()
 log = lambda msg: (print(msg), LOGGER.info(msg))
-
+cleanup_old_logs(log_folder='log', max_logs=10) # Clean up old logs
 
 
 ###########################################################################################################################
@@ -59,6 +51,8 @@ GUILD_ID = os.getenv('DISCORD_GUILD_ID')
 CHANNEL_ID = os.getenv('DISCORD_CHANNEL_ID')
 OFFSET_MINUTES = int(os.getenv('CRON_OFFSET'))
 BOT_NAME = os.getenv("BOT_NAME")
+BOT_ID = os.getenv("BOT_ID")
+API_KEY = os.getenv("API_KEY")
 
 
 
