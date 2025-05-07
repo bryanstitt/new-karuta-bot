@@ -19,10 +19,10 @@ def get_message_timestamp(msg_el, log):
         return 0
 
 def find_valid_mention(driver, bot_name, after_timestamp, log):
-    mentions = driver.find_elements(By.XPATH, f"//span[contains(@class, 'mention') and text()='@{bot_name}']")
+    mentions = driver.find_elements(By.XPATH, f"//span[@class='mention wrapper_f61d60 interactive' and text()='@{bot_name}']")
     for mention in reversed(mentions):
         try:
-            message = mention.find_element(By.XPATH, "./ancestor::div[contains(@class, 'message__')]")
+            message = mention.find_element(By.XPATH, "./ancestor::div[@role='article']")
             if get_message_timestamp(message, log) > after_timestamp:
                 _ = message.tag_name  # Trigger StaleElementReferenceException early
                 return message
