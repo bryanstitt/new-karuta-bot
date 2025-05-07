@@ -35,9 +35,11 @@ def command_listener(driver, bot_name, guild_id, cmd_channel_id, log):
     last_checked_time = time.time()
 
     go_to_channel(driver, guild_id, cmd_channel_id)
+    log("Got to cmd channel")
 
     while True:
         msg_element = find_valid_mention(driver, bot_name, last_checked_time, log)
+        log(f"msg text: {msg_element.text}")
         if msg_element:
                 text = msg_element.text
                 command = parse_sudo_command(text, bot_name)
