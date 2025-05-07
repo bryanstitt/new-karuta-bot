@@ -72,7 +72,7 @@ def wait_and_click_reaction(driver:webdriver.Chrome, sent_kd_time, log):
                     lambda d: len(msg.find_elements(By.CLASS_NAME, "reactionInner__23977")) >= 4
                 )
                 reactions = msg.find_elements(By.CLASS_NAME, "reactionInner__23977")
-                
+
                 dismiss_new_message_bar()
                 scroll_and_click(reactions[index])
 
@@ -86,3 +86,5 @@ def wait_and_click_reaction(driver:webdriver.Chrome, sent_kd_time, log):
                 break
     except Exception as e:
         log(f"ERROR in wait_and_click_reaction: {e}")
+
+    return index, ed

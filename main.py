@@ -4,7 +4,6 @@ Main file for KGBot.
 
 '''
 
-
 import os # environment variables
 import random
 import time
@@ -17,12 +16,13 @@ from misc import wait_16_minutes
 from selenium import webdriver # Selenium WebDriver
 from selenium.webdriver.chrome.options import Options # Chrome options
 from selenium.webdriver.chrome.service import Service # Chrome service
+import threading
+from Message.Threading import command_listener
+
 load_dotenv() # load environment variables
 
 
-
 ###########################################################################################################################
-
 
 
 '''
@@ -38,7 +38,6 @@ cleanup_old_logs(log_folder='log', max_logs=10) # Clean up old logs
 ###########################################################################################################################
 
 
-
 '''
 
 Environment variables
@@ -48,16 +47,15 @@ Environment variables
 EMAIL = os.getenv('DISCORD_EMAIL')
 PASSWORD = os.getenv('DISCORD_PASSWORD')
 GUILD_ID = os.getenv('DISCORD_GUILD_ID')
-CHANNEL_ID = os.getenv('DISCORD_CHANNEL_ID')
+DROP_CHANNEL_ID = os.getenv('DISCORD_CHANNEL_ID')
 OFFSET_MINUTES = int(os.getenv('CRON_OFFSET'))
 BOT_NAME = os.getenv("BOT_NAME")
 BOT_ID = os.getenv("BOT_ID")
 API_KEY = os.getenv("API_KEY")
-
+COMMAND_CHANNEL_ID = "890644443575771166" # BOT_SPAM
 
 
 ###########################################################################################################################
-
 
 
 '''
@@ -74,13 +72,26 @@ service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 
-
 ###########################################################################################################################
-
 
 
 '''
 
+Threading setup
+
+'''
+
+listener_thread = threading.Thread(
+    target=command_listener,
+    args=(driver, BOT_NAME, COMMAND_CHANNEL_ID),
+    daemon=True
+)
+
+
+###########################################################################################################################
+
+
+'''
 Main execution loop. Included here because it calls
 functions from all parts of the bot
 
@@ -100,14 +111,14 @@ def execute_loop(driver):
             executed_first_iteration = False
 
             if failed or (first_iteration and now.minute % 60 in times and now.second == 0):
-                send_kd_and_reaction(driver, log)
+                send_kd_and_reaction(driver)
                 first_iteration = False
                 failed = False
                 executed_first_iteration = True
                 wait_16_minutes(start)
-            
+
             if not first_iteration and not executed_first_iteration:
-                send_kd_and_reaction(driver, log)
+                send_kd_and_reaction(driver)
                 wait_16_minutes(start)
 
             if not executed_first_iteration:
@@ -117,13 +128,11 @@ def execute_loop(driver):
             log(f"Loop error: {e}")
             log("Retrying in 5 seconds...")
             time.sleep(5)
-            get_channel(driver)
+            get_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
             failed = True
 
 
-
 ###########################################################################################################################
-
 
 
 # Start
@@ -133,7 +142,7 @@ if __name__ == "__main__":
 
     for _ in range(3):
         try:
-            login(driver, log)
+            login(driver)
             break
         except Exception as e:
             log(f"Login error: {e}")
@@ -143,11 +152,10 @@ if __name__ == "__main__":
     driver.save_screenshot("post-login.png")
 
 
-
     '''
-    
-    Bot is logged in, now initialize the channel    
-    
+
+    Bot is logged in, now initialize the channel
+
     '''
 
     for _ in range(20):
@@ -159,13 +167,15 @@ if __name__ == "__main__":
                 "Ready to go",
                 "All set",
                 "All systems go"
-            ]), log)
+            ]))
             log("Bot is ready to go!")
             break
         except Exception as e:
             if _ >= 19: exit(1)
             log(f"Send message failed: {e}")
             time.sleep(5)
-            get_channel(driver)
+            get_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
+
+    listener_thread.start() # Start listening on the command channel
 
     execute_loop(driver)
