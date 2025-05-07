@@ -111,14 +111,14 @@ def execute_loop(driver):
             executed_first_iteration = False
 
             if failed or (first_iteration and now.minute % 60 in times and now.second == 0):
-                send_kd_and_reaction(driver)
+                send_kd_and_reaction(driver, log)
                 first_iteration = False
                 failed = False
                 executed_first_iteration = True
                 wait_16_minutes(start)
 
             if not first_iteration and not executed_first_iteration:
-                send_kd_and_reaction(driver)
+                send_kd_and_reaction(driver, log)
                 wait_16_minutes(start)
 
             if not executed_first_iteration:
@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
     for _ in range(3):
         try:
-            login(driver)
+            login(driver, log)
             break
         except Exception as e:
             log(f"Login error: {e}")
@@ -167,7 +167,7 @@ if __name__ == "__main__":
                 "Ready to go",
                 "All set",
                 "All systems go"
-            ]))
+            ]), log)
             log("Bot is ready to go!")
             break
         except Exception as e:

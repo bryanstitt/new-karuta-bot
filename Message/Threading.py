@@ -43,6 +43,6 @@ def command_listener(driver, bot_name, cmd_channel_id, log):
                 command = parse_sudo_command(text, bot_name)
                 if command:
                     log(f"Received sudo command: {command}")
-                    send_msg(driver, cmd_channel_id, command)
+                    send_msg(driver, command, log)
                     last_checked_time = get_message_timestamp(msg_element, log)
         time.sleep(0.5)

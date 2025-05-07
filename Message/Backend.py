@@ -9,7 +9,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from main import log
 load_dotenv()
 
 
@@ -33,7 +32,7 @@ BOT_NAME = os.getenv("BOT_NAME")
 ###########################################################################################################################
 
 
-def send_msg(driver: webdriver.Chrome, trigger) -> float:
+def send_msg(driver: webdriver.Chrome, trigger, log) -> float:
     input_box = WebDriverWait(driver, 15).until(
         lambda d: d.find_element(By.XPATH, '//div[@role="textbox" and @data-slate-editor="true"]')
     )
@@ -44,27 +43,27 @@ def send_msg(driver: webdriver.Chrome, trigger) -> float:
     return time.time()
 
 
-def send_kd_and_reaction(driver: webdriver.Chrome) -> None:
+def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
     now = datetime.now()
     log(f"Executing task at {now.strftime('%Y-%m-%d %H:%M:%S')}")
 
     time.sleep(1)
 
-    sent_kd_time = send_msg(driver, "kd")
+    sent_kd_time = send_msg(driver, "kd", log)
     index, ed = wait_and_click_reaction(driver, sent_kd_time, log)
 
     time.sleep(3)
 
     if BOT_NAME == "Emilia" and index == 0:
-        send_msg(driver, "kt john")
+        send_msg(driver, "kt john", log)
     else:
-        send_msg(driver, "kt burn")
+        send_msg(driver, "kt burn", log)
 
 
 def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id) -> None: driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
 
 
-def login(driver: webdriver.Chrome) -> None:
+def login(driver: webdriver.Chrome, log) -> None:
     driver.get(f"https://discord.com/login?redirect_to=%2Fchannels%2F{GUILD_ID}%2F{DROP_CHANNEL_ID}")
     wait = WebDriverWait(driver, 10)
     email_input = wait.until(EC.presence_of_element_located((By.NAME, 'email')))
