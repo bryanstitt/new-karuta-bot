@@ -31,10 +31,10 @@ def find_valid_mention(driver, bot_name, after_timestamp, log):
     return None
 
 
-def command_listener(driver, bot_name, cmd_channel_id, log):
+def command_listener(driver, bot_name, guild_id, cmd_channel_id, log):
     last_checked_time = time.time()
 
-    go_to_channel(driver, cmd_channel_id)
+    go_to_channel(driver, guild_id, cmd_channel_id)
 
     while True:
         msg_element = find_valid_mention(driver, bot_name, last_checked_time, log)

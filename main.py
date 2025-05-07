@@ -83,7 +83,7 @@ Threading setup
 
 listener_thread = threading.Thread(
     target=command_listener,
-    args=(driver, BOT_NAME, COMMAND_CHANNEL_ID, log),
+    args=(driver, BOT_NAME, GUILD_ID, COMMAND_CHANNEL_ID, log),
     daemon=True
 )
 
