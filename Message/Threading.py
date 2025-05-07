@@ -39,12 +39,12 @@ def command_listener(driver, bot_name, guild_id, cmd_channel_id, log):
 
     while True:
         msg_element = find_valid_mention(driver, bot_name, last_checked_time, log)
-        log(f"msg text: {msg_element.text}")
         if msg_element:
-                text = msg_element.text
-                command = parse_sudo_command(text, bot_name)
-                if command:
-                    log(f"Received sudo command: {command}")
-                    send_msg(driver, command, log)
-                    last_checked_time = get_message_timestamp(msg_element, log)
+            text = msg_element.text
+            log(f"msg text: {msg_element.text}")
+            command = parse_sudo_command(text, bot_name)
+            if command:
+                log(f"Received sudo command: {command}")
+                send_msg(driver, command, log)
+                last_checked_time = get_message_timestamp(msg_element, log)
         time.sleep(0.5)
