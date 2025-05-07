@@ -31,7 +31,9 @@ Logger setup
 
 '''
 LOGGER = setup_logging()
+SUDO_LOGGER = setup_logging(log_folder='sudo_logs')
 log = lambda msg: (print(msg), LOGGER.info(msg))
+sudo_log = lambda msg: (SUDO_LOGGER.info(msg))
 cleanup_old_logs(log_folder='log', max_logs=10) # Clean up old logs
 
 
@@ -52,7 +54,7 @@ OFFSET_MINUTES = int(os.getenv('CRON_OFFSET'))
 BOT_NAME = os.getenv("BOT_NAME")
 BOT_ID = os.getenv("BOT_ID")
 API_KEY = os.getenv("API_KEY")
-COMMAND_CHANNEL_ID = "890644443575771166" # BOT_SPAM
+SUDO_CHANNEL_ID = "890644443575771166" # BOT_SPAM
 
 
 ###########################################################################################################################
@@ -65,12 +67,13 @@ Selenium setup
 '''
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--headless")
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
-service = Service('/usr/bin/chromedriver')
+service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
+# service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
-
+sudo_driver = webdriver.Chrome(service=service, options=chrome_options)
 
 ###########################################################################################################################
 
@@ -81,9 +84,9 @@ Threading setup
 
 '''
 
-listener_thread = threading.Thread(
+sudo_thread = threading.Thread(
     target=command_listener,
-    args=(driver, BOT_NAME, GUILD_ID, COMMAND_CHANNEL_ID, log),
+    args=(sudo_driver, BOT_NAME, GUILD_ID, SUDO_CHANNEL_ID, sudo_log),
     daemon=True
 )
 
@@ -140,13 +143,7 @@ if __name__ == "__main__":
 
     if not EMAIL or not PASSWORD: raise ValueError("Missing credentials in .env")
 
-    for _ in range(3):
-        try:
-            login(driver, log)
-            break
-        except Exception as e:
-            log(f"Login error: {e}")
-            time.sleep(5)
+    login(driver, log, GUILD_ID, DROP_CHANNEL_ID) 
 
     time.sleep(random.uniform(5, 8))
     driver.save_screenshot("post-login.png")
@@ -176,6 +173,6 @@ if __name__ == "__main__":
             time.sleep(5)
             go_to_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
 
-    listener_thread.start() # Start listening on the command channel
+    sudo_thread.start() # Start listening on the command channel
 
     execute_loop(driver)

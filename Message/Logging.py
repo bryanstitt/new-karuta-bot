@@ -3,14 +3,13 @@ import os # environment variables
 from datetime import datetime
 import re
 
-def setup_logging():
+def setup_logging(log_folder='log'):
     """
     Setup logging configuration.
     """
     log_level = os.getenv('LOG_LEVEL', 20)
     LOGGER = logging.getLogger()
     LOGGER.setLevel(logging.WARNING if log_level is None else int(log_level)) # default log level is WARNING
-    log_folder = "log"
     os.makedirs(log_folder, exist_ok=True)
     log_filename = os.path.join(log_folder, datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log"))
     handler = logging.FileHandler(filename=log_filename, encoding='utf-8', mode='w')

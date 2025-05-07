@@ -39,6 +39,7 @@ def send_msg(driver: webdriver.Chrome, trigger, log) -> float:
     input_box.click()
     input_box.send_keys(trigger)
     input_box.send_keys(Keys.ENTER)
+    input_box.send_keys(Keys.ENTER) # for sudo
     log(f"Sent message: {trigger}")
     return time.time()
 
@@ -63,12 +64,18 @@ def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
 def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id) -> None: driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
 
 
-def login(driver: webdriver.Chrome, log) -> None:
-    driver.get(f"https://discord.com/login?redirect_to=%2Fchannels%2F{GUILD_ID}%2F{DROP_CHANNEL_ID}")
-    wait = WebDriverWait(driver, 10)
-    email_input = wait.until(EC.presence_of_element_located((By.NAME, 'email')))
-    password_input = wait.until(EC.presence_of_element_located((By.NAME, 'password')))
-    email_input.send_keys(EMAIL)
-    password_input.send_keys(PASSWORD)
-    driver.find_element(By.XPATH, '//button[@type="submit"]').click()
-    log("Triggered login click.")
+def login(driver: webdriver.Chrome, log, guild_id, channel_id) -> None:
+    for _ in range(3):
+        try:
+            driver.get(f"https://discord.com/login?redirect_to=%2Fchannels%2F{guild_id}%2F{channel_id}")
+            wait = WebDriverWait(driver, 10)
+            email_input = wait.until(EC.presence_of_element_located((By.NAME, 'email')))
+            password_input = wait.until(EC.presence_of_element_located((By.NAME, 'password')))
+            email_input.send_keys(EMAIL)
+            password_input.send_keys(PASSWORD)
+            driver.find_element(By.XPATH, '//button[@type="submit"]').click()
+            log("Triggered login click.")
+            break
+        except Exception as e:
+            log(f"Login error: {e}")
+            time.sleep(5)
