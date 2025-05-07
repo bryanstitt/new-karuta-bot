@@ -55,7 +55,7 @@ def send_kd_and_reaction(driver: webdriver.Chrome) -> None:
 
     time.sleep(3)
 
-    if BOT_NAME is "Emilia" and index == 0:
+    if BOT_NAME == "Emilia" and index == 0:
         send_msg(driver, "kt john")
     else:
         send_msg(driver, "kt burn")
