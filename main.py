@@ -10,7 +10,7 @@ import time
 from Message.Logging import setup_logging, cleanup_old_logs # log files
 from datetime import datetime
 from dotenv import load_dotenv # load environment variables
-from Message.Backend import get_channel
+from Message.Backend import go_to_channel
 from Message.Backend import send_kd_and_reaction, send_msg, login
 from misc import wait_16_minutes
 from selenium import webdriver # Selenium WebDriver
@@ -128,7 +128,7 @@ def execute_loop(driver):
             log(f"Loop error: {e}")
             log("Retrying in 5 seconds...")
             time.sleep(5)
-            get_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
+            go_to_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
             failed = True
 
 
@@ -174,7 +174,7 @@ if __name__ == "__main__":
             if _ >= 19: exit(1)
             log(f"Send message failed: {e}")
             time.sleep(5)
-            get_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
+            go_to_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
 
     listener_thread.start() # Start listening on the command channel
 

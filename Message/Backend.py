@@ -1,7 +1,5 @@
 import os # environment variables
 import time
-import requests # API, tbd
-import re
 from datetime import datetime
 from dotenv import load_dotenv # load environment variables
 from Message.Reactions import wait_and_click_reaction
@@ -63,7 +61,7 @@ def send_kd_and_reaction(driver: webdriver.Chrome) -> None:
         send_msg(driver, "kt burn")
 
 
-def get_channel(driver: webdriver.Chrome, guild_id, channel_id) -> None: driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
+def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id) -> None: driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
 
 
 def login(driver: webdriver.Chrome) -> None:

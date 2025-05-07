@@ -1,33 +1,49 @@
 import time
 import re
 from selenium.webdriver.common.by import By
-from Backend import send_msg, get_channel  # Adjust this import if needed
+from selenium.common.exceptions import StaleElementReferenceException
+from Backend import send_msg, go_to_channel  # Adjust this import if needed
 from main import log
+from datetime import datetime
 
 def parse_sudo_command(text, bot_name):
     pattern = r"@{}\\s+sudo\\s+(.+)".format(re.escape(bot_name))
     match = re.search(pattern, text, re.IGNORECASE)
     return match.group(1) if match else None
 
-def grab_latest_message(driver, bot_name):
+def get_message_timestamp(msg_el):
     try:
-        messages = driver.find_elements(By.XPATH, "//div[contains(@class, 'messageContent')]")
-        if not messages:
-            return None
-
-        latest_message = messages[-1].text
-        return parse_sudo_command(latest_message, bot_name)
+        time_el = msg_el.find_element(By.XPATH, ".//time")
+        return datetime.fromisoformat(time_el.get_attribute("datetime").replace("Z", "+00:00")).timestamp()
     except Exception as e:
-        log(f"Error checking command channel: {e}")
-        return None
+        log(f"Could not get timestamp: {e}")
+        return 0
 
-def command_listener(driver, bot_name, command_channel_id):
-    last_seen_command = ""
-    get_channel(driver, command_channel_id)
+def find_valid_mention(driver, bot_name, after_timestamp):
+    mentions = driver.find_elements(By.XPATH, f"//span[contains(@class, 'mention') and text()='@{bot_name}']")
+    for mention in reversed(mentions):
+        try:
+            message = mention.find_element(By.XPATH, "./ancestor::div[contains(@class, 'message__')]")
+            if get_message_timestamp(message) > after_timestamp:
+                _ = message.tag_name  # Trigger StaleElementReferenceException early
+                return message
+        except StaleElementReferenceException:
+            continue
+    return None
+
+
+def command_listener(driver, bot_name, cmd_channel_id):
+    last_checked_time = time.time()
+
+    go_to_channel(driver, cmd_channel_id)
+
     while True:
-        command = grab_latest_message(driver, bot_name)
-        if command and command != last_seen_command:
-            log(f"Received sudo command: {command}")
-            send_msg(driver, command)
-            last_seen_command = command
-        time.sleep(5)
+        msg_element = find_valid_mention(driver, bot_name, last_checked_time)
+        if msg_element:
+                text = msg_element.text
+                command = parse_sudo_command(text, bot_name)
+                if command:
+                    log(f"Received sudo command: {command}")
+                    send_msg(driver, cmd_channel_id, command)
+                    last_checked_time = get_message_timestamp(msg_element)
+        time.sleep(0.5)
