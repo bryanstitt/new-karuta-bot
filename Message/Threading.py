@@ -2,7 +2,7 @@ import time
 import re
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import StaleElementReferenceException
-from Backend import send_msg, go_to_channel  # Adjust this import if needed
+from .Backend import send_msg, go_to_channel  # Adjust this import if needed
 from datetime import datetime
 
 def parse_sudo_command(text, bot_name):
