@@ -63,7 +63,13 @@ def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
 
 def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id) -> None:
     driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
-    
+    try:
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.XPATH, '//div[@role="textbox" and @data-slate-editor="true"]'))
+        )
+    except Exception as e:
+        print(f"[ERROR] Timeout waiting for channel to load: {e}")
+
 
 
 def login(driver: webdriver.Chrome, log, guild_id, channel_id) -> None:
