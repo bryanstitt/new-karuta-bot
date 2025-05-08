@@ -38,12 +38,10 @@ def command_listener(driver, driver_lock, pause_listener, bot_name, guild_id, cm
         log("Navigated to sudo channel")
 
     while True:
-        log("Checking for sudo commands...")
-
         if pause_listener.is_set():
             time.sleep(0.5)
             continue
-        
+
         with driver_lock:
             msg_element = find_valid_mention(driver, bot_name, last_checked_time, log)
             if msg_element:
