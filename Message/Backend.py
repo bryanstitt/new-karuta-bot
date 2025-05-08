@@ -61,10 +61,10 @@ def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
         send_msg(driver, "kt burn", log)
 
 
-def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id) -> None:
+def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id, timeout=30) -> None:
     driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
     try:
-        WebDriverWait(driver, 15).until(
+        WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, '//div[@role="textbox" and @data-slate-editor="true"]'))
         )
     except Exception as e:
