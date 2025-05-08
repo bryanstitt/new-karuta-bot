@@ -71,9 +71,14 @@ Selenium setup
 '''
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-dev-shm-usage')
+chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-software-rasterizer")
+chrome_options.add_argument("--disable-background-timer-throttling")
+chrome_options.add_argument("--disable-renderer-backgrounding")
+chrome_options.add_argument("--disable-features=VizDisplayCompositor")
 # service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
 service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
@@ -147,7 +152,7 @@ if __name__ == "__main__":
 
     if not EMAIL or not PASSWORD: raise ValueError("Missing credentials in .env")
 
-    login(driver, log, GUILD_ID, DROP_CHANNEL_ID) 
+    login(driver, log, GUILD_ID, DROP_CHANNEL_ID)
 
     time.sleep(random.uniform(5, 8))
     driver.save_screenshot("post-login.png")
