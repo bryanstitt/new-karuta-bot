@@ -54,8 +54,11 @@ def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
     index, ed = wait_and_click_reaction(driver, sent_kd_time, log)
 
     time.sleep(3)
-
-    if BOT_NAME == "Emilia" and index == 0:
+    
+    if index == -1:
+        log("No image found in message.")
+        return
+    elif BOT_NAME == "Emilia" and index == 0:
         send_msg(driver, "kt john", log)
     else:
         send_msg(driver, "kt burn", log)

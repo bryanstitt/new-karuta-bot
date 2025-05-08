@@ -50,19 +50,17 @@ def wait_and_click_reaction(driver:webdriver.Chrome, sent_kd_time, log):
             driver.execute_script("arguments[0].click();", element)
 
     try:
-        for _ in range(3):
-            try:
-                log(f"Waiting for message mentioning @{os.getenv('BOT_NAME')}...")
-                msg = WebDriverWait(driver, 30).until(find_valid_mention)
-                log("Found valid mention.")
-                break
-            except StaleElementReferenceException:
-                log("Retrying after stale element...")
-                time.sleep(1)
-        else:
-            raise Exception("Could not find valid message.")
 
-        download_image_from_message(msg, log)
+        log(f"Waiting for message mentioning @{os.getenv('BOT_NAME')}...")
+        msg = WebDriverWait(driver, 30).until(find_valid_mention)
+        log("Found valid mention.")
+
+        result = download_image_from_message(msg, log)
+
+        if result is None:
+            log("No image found in message.")
+            return -1, -1
+        
         index, ed = get_best_position()
         log(f"Best position: {index+1}, ED: {ed}")
 

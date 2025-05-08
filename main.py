@@ -75,12 +75,6 @@ chrome_options = Options()
 chrome_options.add_argument("--headless=new")
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
-# debug options
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--disable-extensions")
-chrome_options.add_argument("--remote-debugging-port=9222")
-chrome_options.add_argument("--disable-software-rasterizer")
-chrome_options.add_argument("--window-size=1920,1080")
 
 # service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
 service = Service('/usr/bin/chromedriver')
@@ -95,10 +89,11 @@ Threading setup
 
 '''
 driver_lock = threading.Lock()
+pause_listener = threading.Event()
 
 sudo_thread = threading.Thread(
     target=command_listener,
-    args=(driver, driver_lock, BOT_NAME, GUILD_ID, SUDO_CHANNEL_ID, log),
+    args=(driver, driver_lock, pause_listener, BOT_NAME, GUILD_ID, SUDO_CHANNEL_ID, log),
     daemon=True
 )
 
@@ -126,25 +121,33 @@ def execute_loop(driver, driver_lock):
             executed_first_iteration = False
 
             if failed or (first_iteration and now.minute % 60 in times and now.second == 0):
+                pause_listener.set()
+
                 with driver_lock:
                     go_to_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
                     log("Going to drop channel...")
                     send_kd_and_reaction(driver, log)
-                    first_iteration = False
-                    failed = False
-                    executed_first_iteration = True
                     log("Going back to sudo channel...")
                     go_to_channel(driver, GUILD_ID, SUDO_CHANNEL_ID)
-                    wait_16_minutes(start)
+
+                pause_listener.clear()
+
+                first_iteration = False
+                failed = False
+                executed_first_iteration = True
+                wait_16_minutes(start)
 
             if not first_iteration and not executed_first_iteration:
+                pause_listener.set()
                 with driver_lock:
                     go_to_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
                     log("Going to drop channel...")
                     send_kd_and_reaction(driver, log)
                     log("Going back to sudo channel...")
                     go_to_channel(driver, GUILD_ID, SUDO_CHANNEL_ID)
-                    wait_16_minutes(start)
+                
+                pause_listener.clear()
+                wait_16_minutes(start)
 
             if not executed_first_iteration:
                 time.sleep(0.5)
@@ -153,7 +156,8 @@ def execute_loop(driver, driver_lock):
             log(f"Loop error: {e}")
             log("Retrying in 5 seconds...")
             time.sleep(5)
-            go_to_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
+            with driver_lock:
+                go_to_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
             failed = True
 
 
@@ -167,7 +171,7 @@ if __name__ == "__main__":
 
     login(driver, log, GUILD_ID, DROP_CHANNEL_ID)
 
-    time.sleep(random.uniform(5, 8))
+    time.sleep(3)
     driver.save_screenshot("post-login.png")
 
 

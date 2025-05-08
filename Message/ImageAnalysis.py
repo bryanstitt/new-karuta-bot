@@ -11,7 +11,7 @@ Requires pytesseract and PIL (Pillow) libraries.
 import pytesseract
 import re
 import requests
-
+from selenium.common.exceptions import NoSuchElementException
 from PIL import Image, ImageOps
 from selenium.webdriver.common.by import By
 
@@ -51,7 +51,7 @@ def get_ed_and_count(im, left, top, right, bottom) -> None:
         new_im = im.crop((left, top, right, bottom))
         # new_im.show()
         text = pytesseract.image_to_string(new_im)
-        # print(text)
+        print(text)
         if text == "":
             for i in range(1, 10):
                 new_im = im.crop((left+i, top, right-i, bottom))
@@ -81,11 +81,17 @@ def get_ed_and_count(im, left, top, right, bottom) -> None:
 
 
 
-def download_image_from_message(message_element, log) -> None:
-    link = message_element.find_element(By.TAG_NAME, "a")
-    href = link.get_attribute("href")
+def download_image_from_message(message_element, log):
+    try:
+        link = message_element.find_element(By.TAG_NAME, "a")
+        href = link.get_attribute("href")
+    except NoSuchElementException:
+        log("No link found in message element.")
+        return None
+    
     log(f"Downloading image from: {href}")
     r = requests.get(href)
     with open("discord_image.png", "wb") as f:
         f.write(r.content)
     log("Image downloaded as discord_image.png")
+    return "Success"
