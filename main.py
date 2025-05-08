@@ -32,12 +32,13 @@ Logger setup
 '''
 print_lock = threading.Lock()
 
-# def safe_print(*args, **kwargs):
-#     with print_lock:
-#         print(*args, **kwargs)
+def safe_log(msg):
+    with print_lock:
+        print(msg)
+        LOGGER.info(msg)
 
 LOGGER = setup_logging()
-log = lambda msg: (print(msg), LOGGER.info(msg))
+log = safe_log
 cleanup_old_logs(log_folder='log', max_logs=10) # Clean up old logs
 
 
@@ -72,13 +73,15 @@ Selenium setup
 
 chrome_options = Options()
 chrome_options.add_argument("--headless=new")
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-dev-shm-usage')
+# debug options
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-extensions")
+chrome_options.add_argument("--remote-debugging-port=9222")
 chrome_options.add_argument("--disable-software-rasterizer")
-chrome_options.add_argument("--disable-background-timer-throttling")
-chrome_options.add_argument("--disable-renderer-backgrounding")
-chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+chrome_options.add_argument("--window-size=1920,1080")
+
 # service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
 service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
