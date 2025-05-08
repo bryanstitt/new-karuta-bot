@@ -32,12 +32,12 @@ Logger setup
 '''
 print_lock = threading.Lock()
 
-def safe_print(*args, **kwargs):
-    with print_lock:
-        print(*args, **kwargs)
+# def safe_print(*args, **kwargs):
+#     with print_lock:
+#         print(*args, **kwargs)
 
 LOGGER = setup_logging()
-log = lambda msg: (safe_print(msg), LOGGER.info(msg))
+log = lambda msg: (print(msg), LOGGER.info(msg))
 cleanup_old_logs(log_folder='log', max_logs=10) # Clean up old logs
 
 
@@ -77,7 +77,6 @@ chrome_options.add_argument('--disable-dev-shm-usage')
 # service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
 service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
-time.sleep(2) # Wait for the driver to initialize
 sudo_driver = webdriver.Chrome(service=service, options=chrome_options)
 
 ###########################################################################################################################
