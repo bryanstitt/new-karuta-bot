@@ -85,7 +85,6 @@ chrome_options.add_argument("--window-size=1920,1080")
 # service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
 service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
-sudo_driver = webdriver.Chrome(service=service, options=chrome_options)
 
 ###########################################################################################################################
 
@@ -95,10 +94,11 @@ sudo_driver = webdriver.Chrome(service=service, options=chrome_options)
 Threading setup
 
 '''
+driver_lock = threading.Lock()
 
 sudo_thread = threading.Thread(
     target=command_listener,
-    args=(sudo_driver, BOT_NAME, GUILD_ID, SUDO_CHANNEL_ID, log),
+    args=(driver, driver_lock, BOT_NAME, GUILD_ID, SUDO_CHANNEL_ID, log),
     daemon=True
 )
 
@@ -113,7 +113,7 @@ functions from all parts of the bot
 '''
 
 
-def execute_loop(driver):
+def execute_loop(driver, driver_lock):
     times = [(m + OFFSET_MINUTES) % 60 for m in [0, 15, 30, 45]]
     first_iteration = True
     failed = False
@@ -126,15 +126,25 @@ def execute_loop(driver):
             executed_first_iteration = False
 
             if failed or (first_iteration and now.minute % 60 in times and now.second == 0):
-                send_kd_and_reaction(driver, log)
-                first_iteration = False
-                failed = False
-                executed_first_iteration = True
-                wait_16_minutes(start)
+                with driver_lock:
+                    go_to_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
+                    log("Going to drop channel...")
+                    send_kd_and_reaction(driver, log)
+                    first_iteration = False
+                    failed = False
+                    executed_first_iteration = True
+                    log("Going back to sudo channel...")
+                    go_to_channel(driver, GUILD_ID, SUDO_CHANNEL_ID)
+                    wait_16_minutes(start)
 
             if not first_iteration and not executed_first_iteration:
-                send_kd_and_reaction(driver, log)
-                wait_16_minutes(start)
+                with driver_lock:
+                    go_to_channel(driver, GUILD_ID, DROP_CHANNEL_ID)
+                    log("Going to drop channel...")
+                    send_kd_and_reaction(driver, log)
+                    log("Going back to sudo channel...")
+                    go_to_channel(driver, GUILD_ID, SUDO_CHANNEL_ID)
+                    wait_16_minutes(start)
 
             if not executed_first_iteration:
                 time.sleep(0.5)
@@ -187,4 +197,4 @@ if __name__ == "__main__":
 
     sudo_thread.start() # Start listening on the command channel
 
-    execute_loop(driver)
+    execute_loop(driver, driver_lock)

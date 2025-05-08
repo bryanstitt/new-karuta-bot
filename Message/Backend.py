@@ -61,7 +61,9 @@ def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
         send_msg(driver, "kt burn", log)
 
 
-def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id) -> None: driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
+def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id) -> None:
+    driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
+    
 
 
 def login(driver: webdriver.Chrome, log, guild_id, channel_id) -> None:
@@ -77,5 +79,5 @@ def login(driver: webdriver.Chrome, log, guild_id, channel_id) -> None:
             log("Triggered login click.")
             break
         except Exception as e:
-            log(f"Login error: {e}")
+            log(f"Login error... Retrying login...")
             time.sleep(5)

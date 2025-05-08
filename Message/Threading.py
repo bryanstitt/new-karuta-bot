@@ -30,19 +30,20 @@ def find_valid_mention(driver, bot_name, after_timestamp, log):
     return None
 
 
-def command_listener(driver, bot_name, guild_id, cmd_channel_id, log):
+def command_listener(driver, driver_lock, bot_name, guild_id, cmd_channel_id, log):
     last_checked_time = time.time()
-
-    login(driver, log, guild_id, cmd_channel_id)
+    with driver_lock:
+        login(driver, log, guild_id, cmd_channel_id)
     log("Got to cmd channel")
 
     while True:
-        msg_element = find_valid_mention(driver, bot_name, last_checked_time, log)
-        if msg_element:
-            text = msg_element.text
-            command = parse_sudo_command(text)
-            if command:
-                log(f"Received sudo command: {command}")
-                send_msg(driver, command, log)
-                last_checked_time = get_message_timestamp(msg_element, log)
+        with driver_lock:
+            msg_element = find_valid_mention(driver, bot_name, last_checked_time, log)
+            if msg_element:
+                text = msg_element.text
+                command = parse_sudo_command(text)
+                if command:
+                    log(f"Received sudo command: {command}")
+                    send_msg(driver, command, log)
+                    last_checked_time = get_message_timestamp(msg_element, log)
         time.sleep(0.5)
