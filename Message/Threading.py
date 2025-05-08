@@ -32,9 +32,10 @@ def find_valid_mention(driver, bot_name, after_timestamp, log):
 
 def command_listener(driver, driver_lock, bot_name, guild_id, cmd_channel_id, log):
     last_checked_time = time.time()
+
     with driver_lock:
-        login(driver, log, guild_id, cmd_channel_id)
-    log("Got to cmd channel")
+        go_to_channel(driver, guild_id, cmd_channel_id)
+        log("Navigated to sudo channel")
 
     while True:
         with driver_lock:
