@@ -73,6 +73,7 @@ chrome_options.add_argument('--disable-dev-shm-usage')
 # service = Service('C:\\Users\\bryan\\chromedriver-win64\\chromedriver.exe')
 service = Service('/usr/bin/chromedriver')
 driver = webdriver.Chrome(service=service, options=chrome_options)
+time.sleep(2) # Wait for the driver to initialize
 sudo_driver = webdriver.Chrome(service=service, options=chrome_options)
 
 ###########################################################################################################################
