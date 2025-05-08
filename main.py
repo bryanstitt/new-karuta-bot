@@ -30,10 +30,14 @@ load_dotenv() # load environment variables
 Logger setup
 
 '''
+print_lock = threading.Lock()
+
+def safe_print(*args, **kwargs):
+    with print_lock:
+        print(*args, **kwargs)
+
 LOGGER = setup_logging()
-SUDO_LOGGER = setup_logging(log_folder='sudo_logs')
-log = lambda msg: (print(msg), LOGGER.info(msg))
-sudo_log = lambda msg: (SUDO_LOGGER.info(msg))
+log = lambda msg: (safe_print(msg), LOGGER.info(msg))
 cleanup_old_logs(log_folder='log', max_logs=10) # Clean up old logs
 
 
@@ -87,7 +91,7 @@ Threading setup
 
 sudo_thread = threading.Thread(
     target=command_listener,
-    args=(sudo_driver, BOT_NAME, GUILD_ID, SUDO_CHANNEL_ID, sudo_log),
+    args=(sudo_driver, BOT_NAME, GUILD_ID, SUDO_CHANNEL_ID, log),
     daemon=True
 )
 
