@@ -1,7 +1,5 @@
 import os # environment variables
 import time
-import requests # API, tbd
-
 from datetime import datetime
 from dotenv import load_dotenv # load environment variables
 from Message.Reactions import wait_and_click_reaction
@@ -14,9 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 load_dotenv()
 
 
-
 ###########################################################################################################################
-
 
 
 '''
@@ -28,14 +24,12 @@ Environment variables
 EMAIL = os.getenv('DISCORD_EMAIL')
 PASSWORD = os.getenv('DISCORD_PASSWORD')
 GUILD_ID = os.getenv('DISCORD_GUILD_ID')
-CHANNEL_ID = os.getenv('DISCORD_CHANNEL_ID')
+DROP_CHANNEL_ID = os.getenv('DISCORD_CHANNEL_ID')
 OFFSET_MINUTES = int(os.getenv('CRON_OFFSET'))
 BOT_NAME = os.getenv("BOT_NAME")
 
 
-
 ###########################################################################################################################
-
 
 
 def send_msg(driver: webdriver.Chrome, trigger, log) -> float:
@@ -45,9 +39,9 @@ def send_msg(driver: webdriver.Chrome, trigger, log) -> float:
     input_box.click()
     input_box.send_keys(trigger)
     input_box.send_keys(Keys.ENTER)
+    input_box.send_keys(Keys.ENTER) # for sudo
     log(f"Sent message: {trigger}")
     return time.time()
-
 
 
 def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
@@ -57,24 +51,42 @@ def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
     time.sleep(1)
 
     sent_kd_time = send_msg(driver, "kd", log)
-    wait_and_click_reaction(driver, sent_kd_time, log)
+    index, ed = wait_and_click_reaction(driver, sent_kd_time, log)
 
     time.sleep(3)
     
-    send_msg(driver, "kt burn", log) # Add tag logic for slot 1 on Emilia
+    if index == -1:
+        log("No image found in message.")
+        return
+    elif BOT_NAME == "Emilia" and index == 0:
+        send_msg(driver, "kt john", log)
+    else:
+        send_msg(driver, "kt burn", log)
+
+
+def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id, timeout=30) -> None:
+    driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
+    try:
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, '//div[@role="textbox" and @data-slate-editor="true"]'))
+        )
+    except Exception as e:
+        print(f"[ERROR] Timeout waiting for channel to load: {e}")
 
 
 
-def get_channel(driver: webdriver.Chrome) -> None: driver.get(f'https://discord.com/channels/{GUILD_ID}/{CHANNEL_ID}/')
-
-
-
-def login(driver: webdriver.Chrome, log) -> None:
-    driver.get(f"https://discord.com/login?redirect_to=%2Fchannels%2F{GUILD_ID}%2F{CHANNEL_ID}")
-    wait = WebDriverWait(driver, 10)
-    email_input = wait.until(EC.presence_of_element_located((By.NAME, 'email')))
-    password_input = wait.until(EC.presence_of_element_located((By.NAME, 'password')))
-    email_input.send_keys(EMAIL)
-    password_input.send_keys(PASSWORD)
-    driver.find_element(By.XPATH, '//button[@type="submit"]').click()
-    log("Triggered login click.")
+def login(driver: webdriver.Chrome, log, guild_id, channel_id) -> None:
+    for _ in range(3):
+        try:
+            driver.get(f"https://discord.com/login?redirect_to=%2Fchannels%2F{guild_id}%2F{channel_id}")
+            wait = WebDriverWait(driver, 10)
+            email_input = wait.until(EC.presence_of_element_located((By.NAME, 'email')))
+            password_input = wait.until(EC.presence_of_element_located((By.NAME, 'password')))
+            email_input.send_keys(EMAIL)
+            password_input.send_keys(PASSWORD)
+            driver.find_element(By.XPATH, '//button[@type="submit"]').click()
+            log("Triggered login click.")
+            break
+        except Exception as e:
+            log(f"Login error... Retrying login...")
+            time.sleep(5)
