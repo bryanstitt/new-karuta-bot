@@ -64,7 +64,7 @@ def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
         send_msg(driver, "kt burn", log)
 
 
-def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id, timeout=30, retry_interval=3) -> None:
+def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id, timeout=60, retry_interval=10) -> None:
     deadline = time.time() + timeout
     url = f'https://discord.com/channels/{guild_id}/{channel_id}'
 

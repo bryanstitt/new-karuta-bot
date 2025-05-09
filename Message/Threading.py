@@ -5,8 +5,8 @@ from selenium.common.exceptions import StaleElementReferenceException
 from .Backend import send_msg, go_to_channel, login  # Adjust this import if needed
 from datetime import datetime
 
-def parse_sudo_command(message):
-    match = re.search(r"sudo\s+(.*)", message)
+def parse_sudo_command(message, bot_name):
+    match = re.search(rf"@{bot_name}\s+(.*)", message)
     return match.group(1) if match else None
 
 def get_message_timestamp(msg_el, log):
@@ -46,7 +46,7 @@ def command_listener(driver, driver_lock, pause_listener, bot_name, guild_id, cm
             msg_element = find_valid_mention(driver, bot_name, last_checked_time, log)
             if msg_element:
                 text = msg_element.text
-                command = parse_sudo_command(text)
+                command = parse_sudo_command(text, bot_name)
                 if command:
                     log(f"Received sudo command: {command}")
                     send_msg(driver, command, log)
