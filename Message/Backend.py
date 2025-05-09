@@ -4,7 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv # load environment variables
 from Message.Reactions import wait_and_click_reaction
 from selenium import webdriver # Selenium WebDriver; used for Syntax Highlighting in this file
-from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
@@ -64,16 +64,25 @@ def send_kd_and_reaction(driver: webdriver.Chrome, log) -> None:
         send_msg(driver, "kt burn", log)
 
 
-def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id, timeout=30) -> None:
-    driver.get(f'https://discord.com/channels/{guild_id}/{channel_id}/')
-    try:
-        WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((By.XPATH, '//div[@role="textbox" and @data-slate-editor="true"]'))
-        )
-    except Exception as e:
-        print(f"[ERROR] Timeout waiting for channel to load: {e}")
+def go_to_channel(driver: webdriver.Chrome, guild_id, channel_id, timeout=30, retry_interval=3) -> None:
+    deadline = time.time() + timeout
+    url = f'https://discord.com/channels/{guild_id}/{channel_id}'
 
+    while time.time() < deadline:
+        try:
+            driver.get(url)
+            WebDriverWait(driver, retry_interval).until(
+                EC.presence_of_element_located((By.XPATH, '//div[@role="textbox" and @data-slate-editor="true"]'))
+            )
+            return  # Channel loaded successfully
+        except TimeoutException:
+            print(f"[WARN] Retry loading channel {channel_id}...")
+            time.sleep(1)
+        except Exception as e:
+            print(f"[ERROR] Unexpected error while trying to load channel: {e}")
+            time.sleep(1)
 
+    print(f"[ERROR] Failed to load channel {channel_id} after {timeout} seconds.")
 
 def login(driver: webdriver.Chrome, log, guild_id, channel_id) -> None:
     for _ in range(3):
