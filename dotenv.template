@@ -1,5 +1,5 @@
 # Github
-GIT_REPO=https://github.com/bryanstitt/new-karuta-bot
+GIT_REPO=bryanstitt/new-karuta-bot
 GIT_BRANCH=main
 
 # Discord auth
