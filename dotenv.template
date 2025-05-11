@@ -1,0 +1,19 @@
+# Github
+GIT_REPO=https://github.com/bryanstitt/new-karuta-bot
+GIT_BRANCH=main
+
+# Discord auth
+DISCORD_EMAIL=
+DISCORD_PASSWORD=
+DISCORD_GUILD_ID=
+DISCORD_CHANNEL_ID=
+CRON_OFFSET=
+
+# Miscellaneous
+LOG_LEVEL=20
+
+# KGB API
+API_TOKEN=
+API_URL=
+BOT_ID=
+BOT_NAME=
