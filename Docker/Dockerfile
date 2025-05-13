@@ -17,5 +17,8 @@ ENV CHROME_BIN=/usr/bin/chromium \
 WORKDIR /code
 RUN rm -rf /code/*
 
+# Initialize the empty repository
+RUN git init
+
 # Default run command
-CMD ["sh", "-c", "git clone -b $GIT_BRANCH https://github.com/$GIT_REPO.git /code && pip install -r /code/requirements.txt && python main.py"]
+CMD ["sh", "-c", "git remote add origin https://github.com/$GIT_REPO.git; git fetch origin $GIT_BRANCH; git reset --hard origin/$GIT_BRANCH && pip install -r requirements.txt && python main.py"]
